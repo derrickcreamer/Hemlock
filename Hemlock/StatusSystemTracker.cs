@@ -11,15 +11,25 @@ namespace Hemlock {
 		protected TObject obj;
 		protected BaseStatusSystem<TObject, TBaseStatus> rules;
 
+		/// <summary>
+		/// If set to true, message events (OnChanged handlers) will not happen when a status is changed.
+		/// </summary>
 		public bool GenerateNoMessages { get; set; }
+		/// <summary>
+		/// If set to true, effect events (OnChanged handlers) will not happen when a status is changed.
+		/// </summary>
 		public bool GenerateNoEffects { get; set; }
 
 		private DefaultValueDictionary<TBaseStatus, int> currentActualValues;
+		/// <summary>
+		/// Retrieve the current int value of the given status.
+		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// </summary>
 		public int this[TBaseStatus status] {
 			get { return currentActualValues[status]; }
 			set {
 				if(!rules.SingleSource[status]) throw new InvalidOperationException("'SingleSource' must be true in order to set a value directly.");
-				foreach(var source in sources[SourceType.Value][status]) {
+				foreach(var source in sources[SourceType.Feed][status]) {
 					source.Value = value;
 					return; // If any sources exist, change the value of the first one, then return.
 				}
@@ -29,7 +39,13 @@ namespace Hemlock {
 		protected static TBaseStatus Convert<TStatus>(TStatus status) where TStatus : struct {
 			return StatusConverter<TStatus, TBaseStatus>.Convert(status);
 		}
+		/// <summary>
+		/// Returns true if the current value of the given status is greater than zero.
+		/// </summary>
 		public bool HasStatus(TBaseStatus status) => currentActualValues[status] > 0;
+		/// <summary>
+		/// Returns true if the current value of the given status is greater than zero.
+		/// </summary>
 		public bool HasStatus<TStatus>(TStatus status) where TStatus : struct => HasStatus(Convert(status));
 
 		private Dictionary<SourceType, DefaultValueDictionary<TBaseStatus, int>> currentRaw;
@@ -57,21 +73,46 @@ namespace Hemlock {
 				internalFeeds[type] = new Dictionary<TBaseStatus, Dictionary<TBaseStatus, int>>();
 			}
 		}
-		public Source<TObject, TBaseStatus> CreateSource(TBaseStatus status, int value = 1, int priority = 0, SourceType type = SourceType.Value) {
+		/// <summary>
+		/// Conveniently create a Source compatible with this tracker.
+		/// </summary>
+		/// <param name="status">The status to which the Source will add its value</param>
+		/// <param name="value">The amount by which the Source will increase its status</param>
+		/// <param name="priority">A Source with lower priority will be cancelled before a Source with
+		/// higher priority when Cancel() is called on this status.</param>
+		/// <param name="type">
+		/// The SourceType determines whether the Source will feed, suppress, or prevent its status.
+		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
+		/// </param>
+		public Source<TObject, TBaseStatus> CreateSource(TBaseStatus status, int value = 1, int priority = 0, SourceType type = SourceType.Feed) {
 			return new Source<TObject, TBaseStatus>(status, value, priority, type);
 		}
+		/// <summary>
+		/// Conveniently create a Source compatible with this tracker.
+		/// </summary>
+		/// <param name="status">The status to which the Source will add its value</param>
+		/// <param name="value">The amount by which the Source will increase its status</param>
+		/// <param name="priority">A Source with lower priority will be cancelled before a Source with
+		/// higher priority when Cancel() is called on this status.</param>
+		/// <param name="type">
+		/// The SourceType determines whether the Source will feed, suppress, or prevent its status.
+		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
+		/// </param>
 		public Source<TObject, TBaseStatus, TStatus> CreateSource<TStatus>(
-			TStatus status, int value = 1, int priority = 0, SourceType type = SourceType.Value)
+			TStatus status, int value = 1, int priority = 0, SourceType type = SourceType.Feed)
 			where TStatus : struct
 		{
 			return new Source<TObject, TBaseStatus, TStatus>(status, value, priority, type);
 		}
+		/// <summary>
+		/// Add a Source to this tracker, updating the value of the status associated with the given Source.
+		/// </summary>
 		public bool AddSource(Source<TObject, TBaseStatus> source) {
 			if(source == null) throw new ArgumentNullException();
 			TBaseStatus status = source.Status;
 			SourceType type = source.SourceType;
-			if(type == SourceType.Value) {
-				if(currentRaw[SourceType.Prevention][status] > 0) return false;
+			if(type == SourceType.Feed) {
+				if(currentRaw[SourceType.Prevent][status] > 0) return false;
 				var preventableStatuses = new List<TBaseStatus> { status }.Concat(rules.statusesExtendedBy[status]);
 				foreach(var preventableStatus in preventableStatuses) {
 					if(rules.extraPreventionConditions.AnyValues(preventableStatus)) {
@@ -80,7 +121,7 @@ namespace Hemlock {
 						}
 					}
 				}
-				if(rules.SingleSource[status]) sources[SourceType.Value].Clear(status);
+				if(rules.SingleSource[status]) sources[SourceType.Feed].Clear(status);
 			}
 			if(sources[type].AddUnique(status, source)) {
 				source.OnValueChanged += CheckSourceChanged;
@@ -89,20 +130,47 @@ namespace Hemlock {
 			}
 			else return false;
 		}
-		//todo: definitely need xml comments for these methods
-		public Source<TObject, TBaseStatus> Add(TBaseStatus status, int value = 1, int priority = 0, SourceType type = SourceType.Value) {
+		/// <summary>
+		/// Create a new Source and add it to this tracker, updating the value of the given status.
+		/// Returns the newly created Source, if successfully added, or null, if not.
+		/// </summary>
+		/// <param name="status">The status to which the Source will add its value</param>
+		/// <param name="value">The amount by which the Source will increase the given status</param>
+		/// <param name="priority">A Source with lower priority will be cancelled before a Source with
+		/// higher priority when Cancel() is called on its status.</param>
+		/// <param name="type">
+		/// The SourceType determines whether the Source will feed, suppress, or prevent its status.
+		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
+		/// </param>
+		public Source<TObject, TBaseStatus> Add(TBaseStatus status, int value = 1, int priority = 0, SourceType type = SourceType.Feed) {
 			var source = new Source<TObject, TBaseStatus>(status, value, priority, type);
 			if(AddSource(source)) return source;
 			else return null;
 		}
+		/// <summary>
+		/// Create a new Source and add it to this tracker, updating the value of the given status.
+		/// Returns the newly created Source, if successfully added, or null, if not.
+		/// </summary>
+		/// <param name="status">The status to which the Source will add its value</param>
+		/// <param name="value">The amount by which the Source will increase the given status</param>
+		/// <param name="priority">A Source with lower priority will be cancelled before a Source with
+		/// higher priority when Cancel() is called on its status.</param>
+		/// <param name="type">
+		/// The SourceType determines whether the Source will feed, suppress, or prevent its status.
+		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
+		/// </param>
 		public Source<TObject, TBaseStatus, TStatus> Add<TStatus>(
-			TStatus status, int value = 1, int priority = 0, SourceType type = SourceType.Value)
+			TStatus status, int value = 1, int priority = 0, SourceType type = SourceType.Feed)
 			where TStatus : struct
 		{
 			var source = new Source<TObject, TBaseStatus, TStatus>(status, value, priority, type);
 			if(AddSource(source)) return source;
 			else return null;
 		}
+		/// <summary>
+		/// Remove a Source from this tracker, updating the value of the status associated with the given Source.
+		/// Returns true if successful, or false if the Source wasn't in this tracker.
+		/// </summary>
 		public bool RemoveSource(Source<TObject, TBaseStatus> source) {
 			if(source == null) throw new ArgumentNullException();
 			TBaseStatus status = source.Status;
@@ -114,12 +182,20 @@ namespace Hemlock {
 			}
 			else return false;
 		}
+		/// <summary>
+		/// Cancel the given status, removing all "Feed" sources that have been added to this tracker for this status.
+		/// (This will return the value of this status to zero, unless other statuses are feeding this one.)
+		/// </summary>
 		public void Cancel(TBaseStatus status) {
-			foreach(var source in sources[SourceType.Value][status].OrderBy(x => x.Priority)) {
+			foreach(var source in sources[SourceType.Feed][status].OrderBy(x => x.Priority)) {
 				RemoveSource(source);
 			}
 			foreach(TBaseStatus extendingStatus in rules.statusesThatExtend[status]) Cancel(extendingStatus);
 		}
+		/// <summary>
+		/// Cancel the given status, removing all "Feed" sources that have been added to this tracker for this status.
+		/// (This will return the value of this status to zero, unless other statuses are feeding this one.)
+		/// </summary>
 		public void Cancel<TStatus>(TStatus status) where TStatus : struct => Cancel(Convert(status));
 		private OnChangedHandler<TObject, TBaseStatus> GetHandler(TBaseStatus status, bool increased, bool effect) {
 			var change = new StatusChange<TBaseStatus>(status, increased, effect);
@@ -140,15 +216,15 @@ namespace Hemlock {
 			if(stacked) changeStack.Add(rules.onChangedHandlers[status]);
 			var values = sources[type][status].Select(x => x.Value);
 			if(internalFeeds[type].ContainsKey(status)) values = values.Concat(internalFeeds[type][status].Values);
-			IEnumerable<TBaseStatus> upstreamStatuses; //todo: be sure to explain how this works...
-			IEnumerable<TBaseStatus> downstreamStatuses;
-			if(type == SourceType.Value) {
+			IEnumerable<TBaseStatus> upstreamStatuses; // 'Upstream' and 'downstream' statuses change depending on the SourceType.
+			IEnumerable<TBaseStatus> downstreamStatuses; // Value changes to a status are also applied to statuses that this one extends...
+			if(type == SourceType.Feed) {
 				upstreamStatuses = rules.statusesThatExtend[status];
 				downstreamStatuses = rules.statusesExtendedBy[status];
 			}
 			else {
-				upstreamStatuses = rules.statusesExtendedBy[status];
-				downstreamStatuses = rules.statusesThatExtend[status];
+				upstreamStatuses = rules.statusesExtendedBy[status]; // ...while negative changes to a status go the other way,
+				downstreamStatuses = rules.statusesThatExtend[status]; // being applied to statuses that extend this one.
 			}
 			foreach(TBaseStatus otherStatus in upstreamStatuses) {
 				values = values.Concat(sources[type][otherStatus].Select(x => x.Value));
@@ -158,38 +234,24 @@ namespace Hemlock {
 			int oldValue = currentRaw[type][status];
 			if(newValue != oldValue) {
 				currentRaw[type][status] = newValue;
-				if(type == SourceType.Value || type == SourceType.Suppression) CheckActualValueChanged(status);
+				if(type == SourceType.Feed || type == SourceType.Suppress) CheckActualValueChanged(status);
 			}
 			foreach(TBaseStatus otherStatus in downstreamStatuses) {
 				CheckRawChanged(otherStatus, type);
 			}
 			if(stacked) changeStack.RemoveAt(changeStack.Count - 1);
 		}
-		/*
-		todo: put this text into a better comment format.
-
-so, STATUS CHANGED looks like this:
-Using stack, handle message & effect, in whatever order is right.
-Using the rules, for each status that is fed by this one (for value, suppression, or prevention):
-calculate the NEW FED VALUE from here to there, using the converter from the rules, if it exists. Otherwise, it's the same as the value.
-get the OLD FED VALUE from here to there. If no source exists, it is 0. If a source exists, it is that source's value.
-Compare those 2 values to see whether a change has occurred. If it has:
-if the source exists, update its value.
-If not, create a new source with that value, then add it to the target status.
-If the value of this status just increased, using the rules, for each status that is cancelled by this one:
-call Cancel on it, yeah?
-		*/
 		private void CheckActualValueChanged(TBaseStatus status) {
 			int newValue;
-			if(currentRaw[SourceType.Suppression][status] > 0) newValue = 0;
-			else newValue = currentRaw[SourceType.Value][status];
+			if(currentRaw[SourceType.Suppress][status] > 0) newValue = 0;
+			else newValue = currentRaw[SourceType.Feed][status];
 			int oldValue = currentActualValues[status];
 			if(newValue != oldValue) {
 				currentActualValues[status] = newValue;
 				bool increased = newValue > oldValue;
 				if(!GenerateNoMessages) GetHandler(status, increased, false)?.Invoke(obj, status, oldValue, newValue);
 				if(!GenerateNoEffects) GetHandler(status, increased, true)?.Invoke(obj, status, oldValue, newValue);
-				UpdateFeed(status, SourceType.Value, newValue);
+				UpdateFeed(status, SourceType.Feed, newValue);
 				if(increased) {
 					foreach(TBaseStatus cancelledStatus in rules.statusesCancelledBy[status]) {
 						var pair = new StatusPair<TBaseStatus>(status, cancelledStatus);
@@ -197,8 +259,8 @@ call Cancel on it, yeah?
 						if(condition == null || condition(newValue)) Cancel(cancelledStatus); // status to be cancelled.
 					}
 				}
-				UpdateFeed(status, SourceType.Suppression, newValue); // Cancellations happen before suppression to prevent some infinite loops
-				UpdateFeed(status, SourceType.Prevention, newValue);
+				UpdateFeed(status, SourceType.Suppress, newValue); // Cancellations happen before suppression to prevent some infinite loops
+				UpdateFeed(status, SourceType.Prevent, newValue);
 			}
 		}
 		private void UpdateFeed(TBaseStatus status, SourceType type, int newValue) {
@@ -228,6 +290,10 @@ call Cancel on it, yeah?
 	}
 	public class StatusTracker<TObject, TStatus1> : StatusTracker<TObject> where TStatus1 : struct {
 		internal StatusTracker(TObject obj, BaseStatusSystem<TObject, int> rules) : base(obj, rules) { }
+		/// <summary>
+		/// Retrieve the current int value of the given status.
+		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// </summary>
 		public int this[TStatus1 status] {
 			get { return this[Convert(status)]; }
 			set { this[Convert(status)] = value; }
@@ -235,6 +301,10 @@ call Cancel on it, yeah?
 	}
 	public class StatusTracker<TObject, TStatus1, TStatus2> : StatusTracker<TObject, TStatus1> where TStatus1 : struct where TStatus2 : struct {
 		internal StatusTracker(TObject obj, BaseStatusSystem<TObject, int> rules) : base(obj, rules) { }
+		/// <summary>
+		/// Retrieve the current int value of the given status.
+		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// </summary>
 		public int this[TStatus2 status] {
 			get { return this[Convert(status)]; }
 			set { this[Convert(status)] = value; }

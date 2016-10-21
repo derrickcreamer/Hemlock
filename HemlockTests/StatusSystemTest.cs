@@ -37,7 +37,6 @@ namespace HemlockTests {
 			[TestCase] public void BasicSourceOperations() {
 				Assert.Throws<ArgumentNullException>(()=> tracker.AddSource(null));
 				Assert.Throws<ArgumentNullException>(() => tracker.RemoveSource(null));
-				Assert.Throws<ArgumentNullException>(() => new Source<TestObj, TestStatus>(null));
 				Source<TestObj, int> s = new Source<TestObj, int>((int)TestStatus.E, value: 2); // (method #1 of creating Sources)
 				Assert.AreEqual(0, tracker[TestStatus.E]);
 				tracker.AddSource(s);

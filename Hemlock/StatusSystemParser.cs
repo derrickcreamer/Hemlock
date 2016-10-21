@@ -7,6 +7,9 @@ using System.Reflection;
 
 namespace Hemlock {
 	public static class StatusParser {
+		/// <summary>
+		/// Open "<paramref name="filename"/>" and parse its text as rules. Apply the parsed rules to "<paramref name="rules"/>".
+		/// </summary>
 		public static BaseStatusSystem<TObject, TBaseStatus> ParseRulesText<TObject, TBaseStatus>(
 			this BaseStatusSystem<TObject, TBaseStatus> rules, string filename) where TBaseStatus : struct
 		{
@@ -21,6 +24,9 @@ namespace Hemlock {
 			}
 			return rules.ParseRulesText(text);
 		}
+		/// <summary>
+		/// Parse "<paramref name="text"/>" as rules. Apply the parsed rules to "<paramref name="rules"/>".
+		/// </summary>
 		public static BaseStatusSystem<TObject, TBaseStatus> ParseRulesText<TObject, TBaseStatus>(
 			this BaseStatusSystem<TObject, TBaseStatus> rules, IEnumerable<string> text) where TBaseStatus : struct
 		{

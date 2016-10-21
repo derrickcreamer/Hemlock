@@ -321,9 +321,9 @@ namespace Hemlock {
 		}
 		private void CheckRules() {
 			IEnumerable<KeyValuePair<TStatus, IEnumerable<TStatus>>> allPairs;
-			allPairs = rules.statusesFedBy[SourceType.Value];
-			allPairs = allPairs.Concat(rules.statusesFedBy[SourceType.Suppression]);
-			allPairs = allPairs.Concat(rules.statusesFedBy[SourceType.Prevention]);
+			allPairs = rules.statusesFedBy[SourceType.Feed];
+			allPairs = allPairs.Concat(rules.statusesFedBy[SourceType.Suppress]);
+			allPairs = allPairs.Concat(rules.statusesFedBy[SourceType.Prevent]);
 			allPairs = allPairs.Concat(rules.statusesCancelledBy);
 			allPairs = allPairs.Concat(rules.statusesExtendedBy);
 			foreach(var pair in allPairs) { // For every rule...
@@ -395,16 +395,16 @@ namespace Hemlock {
 					}
 				};
 			}
-			foreach(SourceType sourceType in new SourceType[] { SourceType.Value, SourceType.Suppression, SourceType.Prevention }) {
+			foreach(SourceType sourceType in new SourceType[] { SourceType.Feed, SourceType.Suppress, SourceType.Prevent }) {
 				RelationType relation;
 				switch(sourceType) {
-					case SourceType.Value:
+					case SourceType.Feed:
 						relation = RelationType.Feeds;
 						break;
-					case SourceType.Suppression:
+					case SourceType.Suppress:
 						relation = RelationType.Suppresses;
 						break;
-					case SourceType.Prevention:
+					case SourceType.Prevent:
 						relation = RelationType.Prevents;
 						break;
 					default: throw new NotImplementedException();
