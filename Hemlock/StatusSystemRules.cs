@@ -639,26 +639,4 @@ namespace Hemlock {
 		/// <param name="obj">The object associated with the newly created tracker (i.e., the tracker's "owner")</param>
 		new public StatusTracker<TObject> CreateStatusTracker(TObject obj) => new StatusTracker<TObject>(obj, this);
 	}
-	public class StatusSystem<TObject, TStatus1> : StatusSystem<TObject> where TStatus1 : struct {
-		public StatusSystem() { AddConversionCheck<TStatus1>(); }
-		/// <summary>Define a new rule for the given status</summary>
-		public StatusRules this[TStatus1 status] => new StatusRules(this, Convert(status));
-		/// <summary>
-		/// Create a status tracker that'll use the rules already defined.
-		/// Rules will be checked for errors when the first tracker is created (unless IgnoreRuleErrors is set to true).
-		/// </summary>
-		/// <param name="obj">The object associated with the newly created tracker (i.e., the tracker's "owner")</param>
-		new public StatusTracker<TObject, TStatus1> CreateStatusTracker(TObject obj) => new StatusTracker<TObject, TStatus1>(obj, this);
-	}
-	public class StatusSystem<TObject, TStatus1, TStatus2> : StatusSystem<TObject, TStatus1> where TStatus1 : struct where TStatus2 : struct{
-		public StatusSystem() { AddConversionCheck<TStatus2>(); }
-		/// <summary>Define a new rule for the given status</summary>
-		public StatusRules this[TStatus2 status] => new StatusRules(this, Convert(status));
-		/// <summary>
-		/// Create a status tracker that'll use the rules already defined.
-		/// Rules will be checked for errors when the first tracker is created (unless IgnoreRuleErrors is set to true).
-		/// </summary>
-		/// <param name="obj">The object associated with the newly created tracker (i.e., the tracker's "owner")</param>
-		new public StatusTracker<TObject, TStatus1, TStatus2> CreateStatusTracker(TObject obj) => new StatusTracker<TObject, TStatus1, TStatus2>(obj, this);
-	}
 }

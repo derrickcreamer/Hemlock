@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StatusSystemGeneratedCode.cs" />
     <Compile Include="StatusSystemParser.cs" />
     <Compile Include="StatusSystemRuleChecker.cs" />
     <Compile Include="StatusSystemRules.cs" />

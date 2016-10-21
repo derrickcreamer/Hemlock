@@ -288,26 +288,4 @@ namespace Hemlock {
 	public class StatusTracker<TObject> : BaseStatusTracker<TObject, int> {
 		internal StatusTracker(TObject obj, BaseStatusSystem<TObject, int> rules) : base(obj, rules) { }
 	}
-	public class StatusTracker<TObject, TStatus1> : StatusTracker<TObject> where TStatus1 : struct {
-		internal StatusTracker(TObject obj, BaseStatusSystem<TObject, int> rules) : base(obj, rules) { }
-		/// <summary>
-		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
-		/// </summary>
-		public int this[TStatus1 status] {
-			get { return this[Convert(status)]; }
-			set { this[Convert(status)] = value; }
-		}
-	}
-	public class StatusTracker<TObject, TStatus1, TStatus2> : StatusTracker<TObject, TStatus1> where TStatus1 : struct where TStatus2 : struct {
-		internal StatusTracker(TObject obj, BaseStatusSystem<TObject, int> rules) : base(obj, rules) { }
-		/// <summary>
-		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
-		/// </summary>
-		public int this[TStatus2 status] {
-			get { return this[Convert(status)]; }
-			set { this[Convert(status)] = value; }
-		}
-	}
 }
