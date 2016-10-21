@@ -72,7 +72,7 @@ With Hemlock, you can simply enforce 2 new rules:
 
 ## What existing parts will this replace?
 
-If you currently use a Dictionary<Status, int> (or <Status, bool>), or something similar, this lib's StatusTracker is the perfect replacement.
+If you currently use a `Dictionary<Status, int>` (or `<Status, bool>`), or something similar, this lib's StatusTracker is the perfect replacement.
 
 
 ## How is it actually used?
@@ -213,9 +213,13 @@ After messages & effects are applied, this status's new value is propagated to a
 
 Your statuses need to be some kind of value type. Hemlock is designed to work perfectly with enums, but const ints (and others) will work too.
 
-However, the (optional) text parser only works with enums. It's very handy, so please consider using it!
+However, the (optional) text parser only works with enums. It's very handy, so please consider using it! (See the [parser syntax reference](parserReadme.txt) for more info.)
 
-Hemlock supports using several different enums together. However, if two statuses have the same value, they are the same status to Hemlock.
+Hemlock supports using several different enums (or other value types) together - simply specify all of them as type parameters, like this:
+
+    var rules = new StatusSystem<Creature, Status, Spell, Attribute>();
+
+However, if two statuses have the same value, they are the same status to Hemlock.
 
 Since enums start at 0 by default, you'll need a small bit of setup to make sure your enums aren't conflicted:
 
@@ -256,7 +260,7 @@ Calling this method at some point is highly recommended.
 
 However, rule analysis has the potential to be slow, so for release builds - once you've addressed any errors and warnings - you should set IgnoreRuleErrors to true and avoid calling GetRuleErrorsAndWarnings().
 
-For more information on the possible errors & warnings, see <page that doesn't exist yet>.
+For more information on the possible errors & warnings, see `<page that doesn't exist yet>`.
 
 ### Custom aggregators:
 'Total', 'Maximum', and 'Bool' are the built-in value aggregators, but you can define your own, too. Want to calculate the average of all the values, but only if there are at least 127 of them? You can do that.
@@ -360,7 +364,10 @@ This is useful for prevention conditions, because (unlike suppression and cancel
 
 The parser takes a filename or a sequence of strings and applies the rules defined in that text to a StatusSystem object.
 
-See <page that does not yet exist> for parser syntax help.
+Take a look at the [parser syntax reference](parserReadme.txt).
+It's meant to be simple to use, but powerful enough to cover most of the common relationships between statuses.
+
+After the parser has created the relationship rules between statuses, you can add OnChanged handlers for messages & effects just like you normally would.
 
 
 ## Advanced questions
