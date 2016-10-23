@@ -399,4 +399,9 @@ The first situation is illegal because of what would happen if something added t
 
 The second situation is okay, *so long as the rules can guarantee that the infinite loop won't happen.* If any of the three statuses cancels the next (in addition to the suppression), then the cancelled one won't be present on the next loop. Infinite loop averted! The exception to this rule happens when that status is *fed* (by any status). If it's fed, then the cancellation is *not* guaranteed to reset it to zero, and the infinite loop might still happen.
 
-### *Thanks for reading! Any questions?*
+#### How hard is it to do X?
+
+Take a look at some [advanced examples](advancedExamples.md), like how to model two statuses that oppose one another.
+
+### *Thanks for reading!*
+##### *Any questions? You can email me at this same username on Gmail.*
