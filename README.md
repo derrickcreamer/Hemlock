@@ -387,4 +387,16 @@ If PermanentlyBlind was a type of Blinded (if "PermanentlyBlind extends Blinded"
 So, by making PermanentlyBlind feed Blinded, that problem is avoided.
 
 
+#### What makes some rock-paper-scissors suppression cycles dangerous, but not others?
+
+For example, if 3 statuses only suppress each other, that's illegal.
+
+And, when 3 statuses suppress and cancel each other, that's okay...most of the time.
+
+What causes this behavior?
+
+The first situation is illegal because of what would happen if something added to the value of all three of those statuses. Add Rock first. Then add Paper, which suppresses Rock. Then add Scissors, which suppresses Paper - but now that Paper has a value of zero, Rock is no longer suppressed! Since Rock is back, Scissors becomes suppressed - and Paper is no longer suppressed. Paper suppresses Rock again and we're stuck in an infinite loop!
+
+The second situation is okay, *so long as the rules can guarantee that the infinite loop won't happen.* If any of the three statuses cancels the next (in addition to the suppression), then the cancelled one won't be present on the next loop. Infinite loop averted! The exception to this rule happens when that status is *fed* (by any status). If it's fed, then the cancellation is *not* guaranteed to reset it to zero, and the infinite loop might still happen.
+
 ### *Thanks for reading! Any questions?*

@@ -36,7 +36,7 @@ namespace Hemlock {
 		private static List<string> Tokenize(IEnumerable<string> text) {
 			var result = new List<string>();
 			var separators = new[] { ' ', '\t' };
-			var regexSeparators = new[] { "==", "!=", "<", ">", "<=", ">=", "{", "}", ":", ",", ";" };
+			var regexSeparators = new[] { "==", "!=", "<=", ">=", "<", ">", "{", "}", ":", ",", ";" };
 			var regexPattern = "(" + string.Join("|", regexSeparators.Select(x => Regex.Escape(x))) + ")";
 			foreach(string rawLine in text) {
 				string line = rawLine;
@@ -118,6 +118,7 @@ namespace Hemlock {
 							SetAggregator(status, parserDefaultAggregator);
 							SetSourceLimit(status, parserDefaultSourceLimit);
 							if(TryConsume(";")) break;
+							else if(TryConsume("\r\n")) break;
 							else if(TryConsume("{")) BeginBlock(status);
 							else ReadRule(status);
 						}
@@ -327,45 +328,50 @@ namespace Hemlock {
 					}
 				}
 			}
-			switch(verbString) {
-				case "foils":
-					rules[sourceStatus].Foils(condition, targetStatus);
-					break;
-				case "cancels":
-					rules[sourceStatus].Cancels(condition, targetStatus);
-					break;
-				case "extends":
-					rules[sourceStatus].Extends(targetStatus);
-					break;
-				default:
-					if(fedValueString == null) {
-						switch(verbString) {
-							case "feeds":
-								rules[sourceStatus].Feeds(condition, targetStatus);
-								break;
-							case "suppresses":
-								rules[sourceStatus].Suppresses(condition, targetStatus);
-								break;
-							case "prevents":
-								rules[sourceStatus].Prevents(condition, targetStatus);
-								break;
+			try {
+				switch(verbString) {
+					case "foils":
+						rules[sourceStatus].Foils(condition, targetStatus);
+						break;
+					case "cancels":
+						rules[sourceStatus].Cancels(condition, targetStatus);
+						break;
+					case "extends":
+						rules[sourceStatus].Extends(targetStatus);
+						break;
+					default:
+						if(fedValueString == null) {
+							switch(verbString) {
+								case "feeds":
+									rules[sourceStatus].Feeds(condition, targetStatus);
+									break;
+								case "suppresses":
+									rules[sourceStatus].Suppresses(condition, targetStatus);
+									break;
+								case "prevents":
+									rules[sourceStatus].Prevents(condition, targetStatus);
+									break;
+							}
 						}
-					}
-					else {
-						int fedValue = int.Parse(fedValueString);
-						switch(verbString) {
-							case "feeds":
-								rules[sourceStatus].Feeds(fedValue, condition, targetStatus);
-								break;
-							/*case "suppresses":
-								rules[sourceStatus].Suppresses(fedValue, condition, targetStatus);
-								break;
-							case "prevents":
-								rules[sourceStatus].Prevents(fedValue, condition, targetStatus);
-								break;*/
+						else {
+							int fedValue = int.Parse(fedValueString);
+							switch(verbString) {
+								case "feeds":
+									rules[sourceStatus].Feeds(fedValue, condition, targetStatus);
+									break;
+								/*case "suppresses":
+									rules[sourceStatus].Suppresses(fedValue, condition, targetStatus);
+									break;
+								case "prevents":
+									rules[sourceStatus].Prevents(fedValue, condition, targetStatus);
+									break;*/
+							}
 						}
-					}
-					break;
+						break;
+				}
+			}
+			catch(ArgumentException e) {
+				throw new InvalidDataException("Likely illegal condition. See inner exception.", e);
 			}
 		}
 		private Func<int, bool> GetCondition(string opString, string valueString) {

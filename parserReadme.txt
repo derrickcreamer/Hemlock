@@ -17,7 +17,7 @@ echo prevents foxtrot, golf, hotel        # Use commas to specify multiple relat
 india prevented by juliett, kilo    # You can flip the verbs to create multiple relationships in reverse.
 lima fed by mike
 
-november {                  # Use braces to start a block.
+november {                  # Use braces to start a block. The opening brace must appear on the same line as the status.
   cancels oscar
   feeds papa                # The rules inside this block will all be applied to November.
   feeds quebec

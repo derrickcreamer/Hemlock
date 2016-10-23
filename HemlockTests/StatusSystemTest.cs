@@ -485,6 +485,43 @@ namespace HemlockTests {
 				baseTracker.Add(RGB.Green, 4);
 				Assert.AreEqual(3, baseTracker[RGB.Blue]); // 1 from red, 2 from green.
 			}
+			[TestCase] public void LoneStatusSetBasedOnModes() {
+				var pRules = new StatusSystem<TestObj, TestStatus>();
+				List<string> ruleText = new List<string> {
+					"a; b; c",
+					"d",
+					"bool:",
+					"e; f",
+					"a"
+				};
+				pRules.ParseRulesText(ruleText);
+				Assert.AreSame(pRules.Bool, pRules[TestStatus.E].Aggregator);
+				Assert.AreSame(pRules.Bool, pRules[TestStatus.F].Aggregator);
+				Assert.AreSame(pRules.Bool, pRules[TestStatus.A].Aggregator); // All 3 set to bool.
+				pRules.CreateStatusTracker(testObj); // No exception.
+			}
+			[TestCase] public void ParserConditions() {
+				var pRules = new StatusSystem<TestObj, TestStatus>();
+				List<string> ruleTextAB = new List<string> {
+					"a==1 feeds b",
+					"a!=1 feeds b",
+					"a>=1 feeds b",
+					"a<=1 feeds b",
+					"a>1 feeds b",
+					"a<1 feeds b"
+				};
+				List<string> ruleTextCD = new List<string> {
+					"c==5 feeds d 3",
+					"c>=5 feeds d 3",
+					"c>5 feeds d 3",
+				};
+				pRules.ParseRulesText(ruleTextAB); // Works.
+				pRules.ParseRulesText(ruleTextCD); // Works.
+				//These all throw because they try to feed 3 even when c is 0:
+				Assert.Throws<InvalidDataException>(() => pRules.ParseRulesText(new List<string> { "c!=5 feeds d 3" }));
+				Assert.Throws<InvalidDataException>(() => pRules.ParseRulesText(new List<string> { "c<=5 feeds d 3" }));
+				Assert.Throws<InvalidDataException>(() => pRules.ParseRulesText(new List<string> { "c<5 feeds d 3" }));
+			}
 		}
 	}
 }
