@@ -491,6 +491,14 @@ namespace Hemlock {
 			return onChangedHandlers[status][new StatusChange<TBaseStatus>(overridden, increased, effect)];
 		}
 
+		internal DefaultValueDictionary<int, OverrideSet<TObject, TBaseStatus>> overrideSets;
+
+		public OverrideSet<TObject, TBaseStatus> GetOverrideSet(int index) {
+			if(overrideSets == null) overrideSets = new DefaultValueDictionary<int, OverrideSet<TObject, TBaseStatus>>();
+			if(!overrideSets.ContainsKey(index)) overrideSets[index] = new OverrideSet<TObject, TBaseStatus>();
+			return overrideSets[index];
+		}
+
 		/// <summary>
 		/// If set to true, no analysis of rule errors will be performed.
 		/// Because analysis can be slow, this setting is recommended for release builds.

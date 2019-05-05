@@ -206,8 +206,12 @@ namespace Hemlock {
 			return null;
 		}
 		private void CheckSourceChanged(Source<TObject, TBaseStatus> source) {
-			bool stacked = source.onChangedOverrides != null;
-			if(stacked) changeStack.Add(source.onChangedOverrides);
+			bool stacked = source.overrideSetIndex != null;
+			if(stacked) {
+				OverrideSet<TObject, TBaseStatus> overrideSet = rules.overrideSets[source.overrideSetIndex.Value];
+				if(overrideSet == null) throw new InvalidOperationException($"Override set {source.overrideSetIndex.Value} does not exist");
+				changeStack.Add(overrideSet.onChangedOverrides);
+			}
 			CheckRawChanged(source.Status, source.SourceType);
 			if(stacked) changeStack.RemoveAt(changeStack.Count - 1);
 		}

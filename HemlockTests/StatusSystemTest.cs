@@ -195,9 +195,9 @@ namespace HemlockTests {
 				var s = new Source<TestObj, int, TestStatus>[4];
 				for(int i=0;i<4;++i) {
 					int ii = i;
-					s[i] = new Source<TestObj, int, TestStatus>(TestStatus.A, priority: ii*ii); //0, 1, 4, & 9 priority
+					s[i] = new Source<TestObj, int, TestStatus>(TestStatus.A, priority: ii*ii, overrideSetIndex: i); //0, 1, 4, & 9 priority
 					
-					s[i].Overrides(TestStatus.A).Messages.Decreased = (obj, st, ov, nv) => {
+					rules.GetOverrideSet(i).Overrides(TestStatus.A).Messages.Decreased = (obj, st, ov, nv) => {
 						message = $"Status A is no longer true: Source {ii}";
 					};
 				}
@@ -286,10 +286,10 @@ namespace HemlockTests {
 					num = newValue;
 				};
 				rules[TestStatus.B].Feeds(TestStatus.A);
-				var s = new Source<TestObj, int, TestStatus>(TestStatus.B);
-				s.Overrides(TestStatus.A).Messages.Changed = (obj, status, oldValue, newValue) => {
+				rules.GetOverrideSet(0).Overrides(TestStatus.A).Messages.Changed = (obj, status, oldValue, newValue) => {
 					message = "Status A changed because of status B changing";
 				};
+				var s = new Source<TestObj, int, TestStatus>(TestStatus.B, overrideSetIndex: 0);
 				tracker.AddSource(s);
 				Assert.AreEqual("Status A changed because of status B changing", message);
 				Assert.AreEqual(null, messagePart2); // The original change message for A did not happen at all
