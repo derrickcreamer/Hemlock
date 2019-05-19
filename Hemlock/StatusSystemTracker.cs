@@ -131,6 +131,12 @@ namespace Hemlock {
 			else return false;
 		}
 		/// <summary>
+		/// Add a Source to this tracker, updating the value of the status associated with the given Source.
+		/// </summary>
+		public bool AddSource<TStatus>(Source<TObject, TBaseStatus, TStatus> source) where TStatus : struct {
+			return AddSource(source as Source<TObject, TBaseStatus>);
+		}
+		/// <summary>
 		/// Create a new Source and add it to this tracker, updating the value of the given status.
 		/// Returns the newly created Source, if successfully added, or null, if not.
 		/// </summary>
@@ -216,8 +222,17 @@ namespace Hemlock {
 			if(stacked) changeStack.RemoveAt(changeStack.Count - 1);
 		}
 		private void CheckRawChanged(TBaseStatus status, SourceType type) {
-			bool stacked = rules.onChangedHandlers[status] != null;
-			if(stacked) changeStack.Add(rules.onChangedHandlers[status]);
+			bool stacked = false;
+			if(rules.overrideSetsForStatuses.TryGetValue(status, out int overrideSetIndex)) {
+				stacked = true;
+				OverrideSet<TObject, TBaseStatus> overrideSet = rules.overrideSets[overrideSetIndex];
+				if(overrideSet == null) throw new InvalidOperationException($"Override set {overrideSetIndex} does not exist");
+				changeStack.Add(overrideSet.onChangedOverrides);
+			}
+			else if(rules.onChangedHandlers[status] != null) {
+				stacked = true;
+				changeStack.Add(rules.onChangedHandlers[status]);
+			}
 			var values = sources[type][status].Select(x => x.Value);
 			if(internalFeeds[type].ContainsKey(status)) values = values.Concat(internalFeeds[type][status].Values);
 			IEnumerable<TBaseStatus> upstreamStatuses; // 'Upstream' and 'downstream' statuses change depending on the SourceType.

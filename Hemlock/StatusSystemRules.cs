@@ -147,6 +147,14 @@ namespace Hemlock {
 				return Overrides(Convert(overridden));
 			}
 			/// <summary>
+			/// If set, this status will use the specified override set instead of any message/effect handlers defined on the status itself.
+			/// If set to null, no override set will be used.
+			/// </summary>
+			public void UsesOverrideSet(int? overrideSetIndex) {
+				if(overrideSetIndex == null) rules.overrideSetsForStatuses.Remove(status);
+				else rules.overrideSetsForStatuses[status] = overrideSetIndex.Value;
+			}
+			/// <summary>
 			/// The value aggregator for this status - if this property is null, the default aggregator is used instead.
 			/// </summary>
 			public Aggregator Aggregator {
@@ -494,10 +502,11 @@ namespace Hemlock {
 		internal DefaultValueDictionary<int, OverrideSet<TObject, TBaseStatus>> overrideSets;
 
 		public OverrideSet<TObject, TBaseStatus> GetOverrideSet(int index) {
-			if(overrideSets == null) overrideSets = new DefaultValueDictionary<int, OverrideSet<TObject, TBaseStatus>>();
 			if(!overrideSets.ContainsKey(index)) overrideSets[index] = new OverrideSet<TObject, TBaseStatus>();
 			return overrideSets[index];
 		}
+
+		internal DefaultValueDictionary<TBaseStatus, int> overrideSetsForStatuses;
 
 		/// <summary>
 		/// If set to true, no analysis of rule errors will be performed.
@@ -637,6 +646,8 @@ namespace Hemlock {
 			}
 			onChangedHandlers = new DefaultValueDictionary<TBaseStatus, DefaultValueDictionary<StatusChange<TBaseStatus>, OnChangedHandler<TObject, TBaseStatus>>>();
 			extraPreventionConditions = new MultiValueDictionary<TBaseStatus, Func<TObject, TBaseStatus, bool>>();
+			overrideSets = new DefaultValueDictionary<int, OverrideSet<TObject, TBaseStatus>>();
+			overrideSetsForStatuses = new DefaultValueDictionary<TBaseStatus, int>();
 		}
 	}
 	public class StatusSystem<TObject> : BaseStatusSystem<TObject, int> {

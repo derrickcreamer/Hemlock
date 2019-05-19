@@ -295,6 +295,33 @@ namespace HemlockTests {
 				Assert.AreEqual(null, messagePart2); // The original change message for A did not happen at all
 				Assert.AreEqual(1, num); // Increase effect was not overridden
 			}
+			[TestCase] public void StatusOverridesWithOverrideSet() {
+				bool increased = false;
+				rules.GetOverrideSet(19).Overrides(TestStatus.C).Effects.Increased = (obj, st, ov, nv) => {
+					increased = true;
+				};
+				rules[TestStatus.C].UsesOverrideSet(19);
+				rules[TestStatus.C].Effects.Increased = (obj, st, ov, nv) => {
+					throw new Exception("should not happen"); // Since TestStatus.C is using an override set, its normal handlers are ignored
+				};
+				tracker.Add(TestStatus.C);
+				Assert.IsTrue(increased); // Only the handler from the override set was applied
+			}
+			[TestCase] public void SourceOverridesWithOverrideSet() {
+				int n = 0;
+				rules.GetOverrideSet(1).Overrides(TestStatus.E).Effects.Changed = (obj, st, ov, nv) => {
+					n = 5;
+				};
+				rules.GetOverrideSet(2).Overrides(TestStatus.E).Effects.Changed = (obj, st, ov, nv) => {
+					n = 6;
+				};
+				rules[TestStatus.E].Effects.Changed = (obj, st, ov, nv) => {
+					n = 7;
+				};
+				rules[TestStatus.E].UsesOverrideSet(1);
+				tracker.AddSource(new Source<TestObj, int, TestStatus>(TestStatus.E, overrideSetIndex: 2));
+				Assert.AreEqual(6, n);
+			}
 			[TestCase] public void ToggleGenerateOptions() {
 				int i = 0, j = 0;
 				rules[TestStatus.A].Messages.Changed = (obj, st, ov, nv) => {
