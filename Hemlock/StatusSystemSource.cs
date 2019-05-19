@@ -101,6 +101,7 @@ namespace Hemlock {
 		/// <param name="value">If provided, the copy will be created with this value.</param>
 		/// <param name="priority">If provided, the copy will be created with this priority.</param>
 		/// <param name="type">If provided, the copy will be created with this SourceType.</param>
+		/// <param name="overrideSetIndex">If provided, the copy will be created with this override set index.</param>
 		public Source<TObject, TBaseStatus> Clone(int? value = null, int? priority = null, SourceType? type = null, int? overrideSetIndex = null) {
 			return new Source<TObject, TBaseStatus>(this, value, priority, type, overrideSetIndex);
 		}
