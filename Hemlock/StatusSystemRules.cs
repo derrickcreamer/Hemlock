@@ -567,7 +567,8 @@ namespace Hemlock {
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
 		/// </param>
 		public Source<TObject, TBaseStatus> CreateSource(TBaseStatus status, int value = 1, int priority = 0,
-			SourceType type = SourceType.Feed, int? overrideSetIndex = null) {
+			SourceType type = SourceType.Feed, int? overrideSetIndex = null)
+		{
 			return new Source<TObject, TBaseStatus>(status, value, priority, type, overrideSetIndex);
 		}
 		/// <summary>

@@ -110,6 +110,7 @@ namespace Hemlock {
 		/// </summary>
 		public bool AddSource(Source<TObject, TBaseStatus> source) {
 			if(source == null) throw new ArgumentNullException();
+			if(source.tracker != null && source.tracker != this) throw new InvalidOperationException("Already added to another tracker");
 			TBaseStatus status = source.Status;
 			SourceType type = source.SourceType;
 			if(type == SourceType.Feed) {
@@ -125,7 +126,7 @@ namespace Hemlock {
 				if(rules.SingleSource[status]) sources[SourceType.Feed].Clear(status);
 			}
 			if(sources[type].AddUnique(status, source)) {
-				source.OnValueChanged += CheckSourceChanged;
+				source.tracker = this;
 				CheckSourceChanged(source);
 				return true;
 			}
@@ -185,7 +186,7 @@ namespace Hemlock {
 			TBaseStatus status = source.Status;
 			SourceType type = source.SourceType;
 			if(sources[type].Remove(status, source)) {
-				source.OnValueChanged -= CheckSourceChanged;
+				source.tracker = null;
 				CheckSourceChanged(source);
 				return true;
 			}
@@ -214,7 +215,7 @@ namespace Hemlock {
 			}
 			return null;
 		}
-		private void CheckSourceChanged(Source<TObject, TBaseStatus> source) {
+		internal void CheckSourceChanged(Source<TObject, TBaseStatus> source) {
 			bool stacked = source.overrideSetIndex != null;
 			if(stacked) {
 				OverrideSet<TObject, TBaseStatus> overrideSet = rules.overrideSets[source.overrideSetIndex.Value];

@@ -31,7 +31,7 @@ namespace Hemlock {
 			return StatusConverter<TStatus, TBaseStatus>.Convert(status);
 		}
 	}
-	public class Source<TObject, TBaseStatus> {
+	public class Source<TObject, TBaseStatus> where TBaseStatus : struct {
 		/// <summary>
 		/// The status to which this Source will add its value
 		/// </summary>
@@ -41,7 +41,7 @@ namespace Hemlock {
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
 		/// </summary>
 		public readonly SourceType SourceType;
-		internal event Action<Source<TObject, TBaseStatus>> OnValueChanged;
+		internal BaseStatusTracker<TObject, TBaseStatus> tracker;
 		private int internalValue;
 		/// <summary>
 		/// The value added to this Source's status. If this property is changed after this Source has been added
@@ -52,7 +52,7 @@ namespace Hemlock {
 			set {
 				if(value != internalValue) {
 					internalValue = value;
-					OnValueChanged?.Invoke(this);
+					tracker?.CheckSourceChanged(this);
 				}
 			}
 		}
