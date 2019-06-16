@@ -582,11 +582,11 @@ namespace Hemlock {
 		/// The SourceType determines whether the Source will feed, suppress, or prevent its status.
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
 		/// </param>
-		public Source<TObject, TBaseStatus, TStatus> CreateSource<TStatus>(TStatus status, int value = 1,
-			int priority = 0, SourceType type = SourceType.Feed, int? overrideSetIndex = null)
+		public Source<TObject, TBaseStatus> CreateSource<TStatus>(TStatus status, int value = 1, int priority = 0,
+			SourceType type = SourceType.Feed, int? overrideSetIndex = null)
 			where TStatus : struct
 		{
-			return new Source<TObject, TBaseStatus, TStatus>(status, value, priority, type, overrideSetIndex);
+			return new Source<TObject, TBaseStatus>(Convert(status), value, priority, type, overrideSetIndex);
 		}
 		protected static TBaseStatus Convert<TStatus>(TStatus status) where TStatus : struct {
 			try {

@@ -74,7 +74,7 @@ namespace Hemlock {
 			}
 		}
 		/// <summary>
-		/// Conveniently create a Source compatible with this tracker.
+		/// Conveniently create a Source compatible with this tracker. Does not add the Source to the tracker automatically.
 		/// </summary>
 		/// <param name="status">The status to which the Source will add its value</param>
 		/// <param name="value">The amount by which the Source will increase its status</param>
@@ -85,11 +85,12 @@ namespace Hemlock {
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
 		/// </param>
 		public Source<TObject, TBaseStatus> CreateSource(TBaseStatus status, int value = 1, int priority = 0,
-			SourceType type = SourceType.Feed, int? overrideSetIndex = null) {
+			SourceType type = SourceType.Feed, int? overrideSetIndex = null)
+		{
 			return new Source<TObject, TBaseStatus>(status, value, priority, type, overrideSetIndex);
 		}
 		/// <summary>
-		/// Conveniently create a Source compatible with this tracker.
+		/// Conveniently create a Source compatible with this tracker. Does not add the Source to the tracker automatically.
 		/// </summary>
 		/// <param name="status">The status to which the Source will add its value</param>
 		/// <param name="value">The amount by which the Source will increase its status</param>
@@ -99,11 +100,11 @@ namespace Hemlock {
 		/// The SourceType determines whether the Source will feed, suppress, or prevent its status.
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
 		/// </param>
-		public Source<TObject, TBaseStatus, TStatus> CreateSource<TStatus>(TStatus status, int value = 1,
-			int priority = 0, SourceType type = SourceType.Feed, int? overrideSetIndex = null)
+		public Source<TObject, TBaseStatus> CreateSource<TStatus>(TStatus status, int value = 1, int priority = 0,
+			SourceType type = SourceType.Feed, int? overrideSetIndex = null)
 			where TStatus : struct
 		{
-			return new Source<TObject, TBaseStatus, TStatus>(status, value, priority, type, overrideSetIndex);
+			return new Source<TObject, TBaseStatus>(Convert(status), value, priority, type, overrideSetIndex);
 		}
 		/// <summary>
 		/// Add a Source to this tracker, updating the value of the status associated with the given Source.
@@ -131,12 +132,6 @@ namespace Hemlock {
 				return true;
 			}
 			else return false;
-		}
-		/// <summary>
-		/// Add a Source to this tracker, updating the value of the status associated with the given Source.
-		/// </summary>
-		public bool AddSource<TStatus>(Source<TObject, TBaseStatus, TStatus> source) where TStatus : struct {
-			return AddSource(source as Source<TObject, TBaseStatus>);
 		}
 		/// <summary>
 		/// Create a new Source and add it to this tracker, updating the value of the given status.
@@ -169,11 +164,11 @@ namespace Hemlock {
 		/// The SourceType determines whether the Source will feed, suppress, or prevent its status.
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
 		/// </param>
-		public Source<TObject, TBaseStatus, TStatus> Add<TStatus>(TStatus status, int value = 1, int priority = 0,
+		public Source<TObject, TBaseStatus> Add<TStatus>(TStatus status, int value = 1, int priority = 0,
 			SourceType type = SourceType.Feed, int? overrideSetIndex = null)
 			where TStatus : struct
 		{
-			var source = new Source<TObject, TBaseStatus, TStatus>(status, value, priority, type, overrideSetIndex);
+			var source = new Source<TObject, TBaseStatus>(Convert(status), value, priority, type, overrideSetIndex);
 			if(AddSource(source)) return source;
 			else return null;
 		}

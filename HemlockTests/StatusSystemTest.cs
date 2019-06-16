@@ -43,7 +43,7 @@ namespace HemlockTests {
 				Assert.AreEqual(2, tracker[TestStatus.E]);
 				s.Value = 7;
 				Assert.AreEqual(7, tracker[TestStatus.E]);
-				Source<TestObj, int> s2 = new Source<TestObj, int, TestStatus>(TestStatus.E, value: 6); // (method #2 of creating Sources)
+				Source<TestObj, int> s2 = tracker.CreateSource(TestStatus.E, value: 6); // (method #2 of creating Sources)
 				tracker.AddSource(s2);
 				Assert.AreEqual(13, tracker[TestStatus.E]);
 				tracker.RemoveSource(s);
@@ -62,7 +62,7 @@ namespace HemlockTests {
 				rules[TestStatus.B].SingleSource = true;
 				tracker[TestStatus.B] = -4;
 				Assert.AreEqual(-4, tracker[TestStatus.B]);
-				var s3 = new Source<TestObj, int, TestStatus>(TestStatus.B, value: 1);
+				var s3 = tracker.CreateSource(TestStatus.B, value: 1);
 				tracker.AddSource(s3);
 				Assert.AreEqual(1, tracker[TestStatus.B]);
 				tracker.Cancel(TestStatus.B);
@@ -81,6 +81,23 @@ namespace HemlockTests {
 				BaseStatusTracker<TestObj, char> charTracker = charRules.CreateStatusTracker(testObj);
 				charTracker.Add('@');
 				Assert.AreEqual(1, charTracker['@']);
+			}
+			[TestCase] public void TryGetValue() {
+				var source = new Source<TestObj, int>(7); // 7 is defined for TestStatus
+				TestStatus status;
+				Assert.True(source.TryGetStatus(out status));
+				Assert.AreEqual(TestStatus.D, status);
+
+				var source2 = new Source<TestObj, int>(8); // 8 is not defined for TestStatus
+				Assert.False(source2.TryGetStatus(out status)); // Returns false, no exception
+			}
+			[TestCase]
+			public void GetValue() {
+				var source = new Source<TestObj, int>(7); // 7 is defined for TestStatus
+				Assert.AreEqual(TestStatus.D, source.GetStatus<TestStatus>());
+
+				var source2 = new Source<TestObj, int>(8); // 8 is not defined for TestStatus
+				Assert.AreEqual((TestStatus)8, source2.GetStatus<TestStatus>());
 			}
 		}
 		[TestFixture] public class Aggregators : StatusSystemTest {
@@ -159,9 +176,9 @@ namespace HemlockTests {
 				rules[TestStatus.A].PreventedWhen((obj, status) => obj != testObj); // only testObj can receive status.A
 				TestObj testObj2 = new TestObj();
 				var tracker2 = rules.CreateStatusTracker(testObj2);
-				tracker.AddSource(new Source<TestObj, int, TestStatus>(TestStatus.A, 3));
+				tracker.AddSource(new Source<TestObj, int>((int)TestStatus.A, 3));
 				Assert.AreEqual(3, tracker[TestStatus.A]); // not prevented for testObj
-				tracker2.AddSource(new Source<TestObj, int, TestStatus>(TestStatus.A, 3));
+				tracker2.AddSource(new Source<TestObj, int>((int)TestStatus.A, 3));
 				Assert.AreEqual(0, tracker2[TestStatus.A]); // prevented for testObj2
 			}
 			[TestCase] public void Cancels() {
@@ -192,10 +209,10 @@ namespace HemlockTests {
 				rules[TestStatus.A].Messages.Decreased = (obj, st, ov, nv) => {
 					message = "Status A is no longer true";
 				};
-				var s = new Source<TestObj, int, TestStatus>[4];
+				var s = new Source<TestObj, int>[4];
 				for(int i=0;i<4;++i) {
 					int ii = i;
-					s[i] = new Source<TestObj, int, TestStatus>(TestStatus.A, priority: ii*ii, overrideSetIndex: i); //0, 1, 4, & 9 priority
+					s[i] = new Source<TestObj, int>((int)TestStatus.A, priority: ii*ii, overrideSetIndex: i); //0, 1, 4, & 9 priority
 					
 					rules.GetOverrideSet(i).Overrides(TestStatus.A).Messages.Decreased = (obj, st, ov, nv) => {
 						message = $"Status A is no longer true: Source {ii}";
@@ -289,7 +306,7 @@ namespace HemlockTests {
 				rules.GetOverrideSet(0).Overrides(TestStatus.A).Messages.Changed = (obj, status, oldValue, newValue) => {
 					message = "Status A changed because of status B changing";
 				};
-				var s = new Source<TestObj, int, TestStatus>(TestStatus.B, overrideSetIndex: 0);
+				var s = new Source<TestObj, int>((int)TestStatus.B, overrideSetIndex: 0);
 				tracker.AddSource(s);
 				Assert.AreEqual("Status A changed because of status B changing", message);
 				Assert.AreEqual(null, messagePart2); // The original change message for A did not happen at all
@@ -319,7 +336,7 @@ namespace HemlockTests {
 					n = 7;
 				};
 				rules[TestStatus.E].UsesOverrideSet(1);
-				tracker.AddSource(new Source<TestObj, int, TestStatus>(TestStatus.E, overrideSetIndex: 2));
+				tracker.Add(TestStatus.E, overrideSetIndex: 2);
 				Assert.AreEqual(6, n);
 			}
 			[TestCase] public void ToggleGenerateOptions() {
