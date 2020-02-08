@@ -4,13 +4,16 @@ using System.Linq;
 using UtilityCollections;
 
 namespace Hemlock {
-	internal class RuleChecker<TObject, TStatus> where TStatus : struct {
-		private BaseStatusSystem<TObject, TStatus> rules;
+
+	using TStatus = System.Int32;
+
+	internal class RuleChecker<TObject> {
+		private StatusSystem<TObject> rules;
 		private MultiValueDictionary<TStatus, Relationship> relationships = new MultiValueDictionary<TStatus, Relationship>();
 		private DefaultHashSet<List<TStatus>> visitedRps; // To avoid duplicating messages for rock-paper-scissors relationships.
 		private DefaultHashSet<TStatus> started = new DefaultHashSet<TStatus>();
 		private DefaultHashSet<TStatus> completed = new DefaultHashSet<TStatus>();
-		internal RuleChecker(BaseStatusSystem<TObject, TStatus> rules) {
+		internal RuleChecker(StatusSystem<TObject> rules) {
 			visitedRps = new DefaultHashSet<List<TStatus>>(new IEnumValueEquality<TStatus>()); // Compare lists with value equality!
 			this.rules = rules;
 			CheckRules();
@@ -41,14 +44,14 @@ namespace Hemlock {
 		internal List<string> GetErrors(bool includeWarnings) {
 			List<string> result = new List<string>();
 			CheckRpsErrors(result, includeWarnings);
-			var negativeRelationships = new MultiValueDictionary<StatusPair<TStatus>, Relationship>();
-			var positiveRelationships = new MultiValueDictionary<StatusPair<TStatus>, Relationship>();
-			var mutualSuppressions = new DefaultHashSet<StatusPair<TStatus>>();
+			var negativeRelationships = new MultiValueDictionary<StatusPair, Relationship>();
+			var positiveRelationships = new MultiValueDictionary<StatusPair, Relationship>();
+			var mutualSuppressions = new DefaultHashSet<StatusPair>();
 			foreach(Relationship r in relationships.GetAllValues()) {
 				if(r.Path.Count == 1) continue; // Skip any 'self' relationships.
 				if(!r.ChainBroken) { // Tally negative and positive (direct) relationships. These are compared later.
-					if(r.IsNegative) negativeRelationships.Add(new StatusPair<TStatus>(r.SourceStatus, r.TargetStatus), r);
-					else positiveRelationships.Add(new StatusPair<TStatus>(r.SourceStatus, r.TargetStatus), r);
+					if(r.IsNegative) negativeRelationships.Add(new StatusPair(r.SourceStatus, r.TargetStatus), r);
+					else positiveRelationships.Add(new StatusPair(r.SourceStatus, r.TargetStatus), r);
 				}
 				if(r.SourceStatus.Equals(r.TargetStatus) && !r.ChainBroken && !r.IsNegative) {
 					if(r.IsConditional) {
@@ -117,10 +120,10 @@ namespace Hemlock {
 						var otherWay = relationships[r.TargetStatus].ToList()
 							.Find(x => x.TargetStatus.Equals(r.SourceStatus) && !x.ChainBroken && x.Relation == RelationType.Suppresses);
 						if(otherWay != null) { // ...find out whether they both suppress one another.
-							var pair = new StatusPair<TStatus>(r.SourceStatus, r.TargetStatus);
+							var pair = new StatusPair(r.SourceStatus, r.TargetStatus);
 							if(!mutualSuppressions[pair]) { // If it hasn't already been handled...
 								mutualSuppressions[pair] = true;
-								mutualSuppressions[new StatusPair<TStatus>(r.TargetStatus, r.SourceStatus)] = true;
+								mutualSuppressions[new StatusPair(r.TargetStatus, r.SourceStatus)] = true;
 								string error = $"WARNING:  Mutual suppression. (This warning exists to make certain that you don't expect these 2 statuses to \"cancel each other out\". Instead, whichever status is created first will win. See the docs for more info.):";
 								error += GetPathString(r.Path, false);
 								error += GetPathString(otherWay.Path, false);
@@ -386,7 +389,7 @@ namespace Hemlock {
 				};
 			}
 			foreach(TStatus targetStatus in rules.statusesCancelledBy[status]) {
-				var pair = new StatusPair<TStatus>(status, targetStatus);
+				var pair = new StatusPair(status, targetStatus);
 				bool conditional = rules.cancellationConditions[pair] != null;
 				yield return new Relationship {
 					Path = new List<DirectRelation> {
@@ -410,7 +413,7 @@ namespace Hemlock {
 					default: throw new NotImplementedException();
 				}
 				foreach(TStatus targetStatus in rules.statusesFedBy[sourceType][status]) {
-					var pair = new StatusPair<TStatus>(status, targetStatus);
+					var pair = new StatusPair(status, targetStatus);
 					bool conditional = rules.converters[sourceType].ContainsKey(pair);
 					yield return new Relationship {
 						Path = new List<DirectRelation> {

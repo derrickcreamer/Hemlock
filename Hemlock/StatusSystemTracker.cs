@@ -6,10 +6,11 @@ using UtilityCollections;
 namespace Hemlock {
 
 	using Converter = Func<int, int>;
+	using TBaseStatus = System.Int32;
 
-	public class BaseStatusTracker<TObject, TBaseStatus> where TBaseStatus : struct {
+	public class StatusTracker<TObject> {
 		protected TObject obj;
-		protected BaseStatusSystem<TObject, TBaseStatus> rules;
+		protected StatusSystem<TObject> rules;
 
 		/// <summary>
 		/// If set to true, message events (OnChanged handlers) will not happen when a status is changed.
@@ -33,7 +34,7 @@ namespace Hemlock {
 					source.Value = value;
 					return; // If any sources exist, change the value of the first one, then return.
 				}
-				AddSource(new Source<TObject, TBaseStatus>(status, value)); // Otherwise, create a new one.
+				AddSource(new Source<TObject>(status, value)); // Otherwise, create a new one.
 			}
 		}
 		protected static TBaseStatus Convert<TStatus>(TStatus status) where TStatus : struct {
@@ -52,24 +53,24 @@ namespace Hemlock {
 		//public bool IsSuppressed(TStatus status) => currentRaw[SourceType.Suppression][status] > 0;
 		//public bool IsPrevented(TStatus status) => currentRaw[SourceType.Prevention][status] > 0;
 
-		private Dictionary<SourceType, MultiValueDictionary<TBaseStatus, Source<TObject, TBaseStatus>>> sources;
+		private Dictionary<SourceType, MultiValueDictionary<TBaseStatus, Source<TObject>>> sources;
 
 		private Dictionary<SourceType, Dictionary<TBaseStatus, Dictionary<TBaseStatus, int>>> internalFeeds;
 
-		private List<DefaultValueDictionary<StatusChange<TBaseStatus>, OnChangedHandler<TObject, TBaseStatus>>> changeStack;
+		private List<DefaultValueDictionary<StatusChange, OnChangedHandler<TObject>>> changeStack;
 
-		internal BaseStatusTracker(TObject obj, BaseStatusSystem<TObject, TBaseStatus> rules) {
+		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) {
 			this.obj = obj;
 			this.rules = rules;
 			if(rules != null) rules.TrackerCreated = true;
 			currentActualValues = new DefaultValueDictionary<TBaseStatus, int>();
 			currentRaw = new Dictionary<SourceType, DefaultValueDictionary<TBaseStatus, int>>();
-			sources = new Dictionary<SourceType, MultiValueDictionary<TBaseStatus, Source<TObject, TBaseStatus>>>();
+			sources = new Dictionary<SourceType, MultiValueDictionary<TBaseStatus, Source<TObject>>>();
 			internalFeeds = new Dictionary<SourceType, Dictionary<TBaseStatus, Dictionary<TBaseStatus, int>>>();
-			changeStack = new List<DefaultValueDictionary<StatusChange<TBaseStatus>, OnChangedHandler<TObject, TBaseStatus>>>();
+			changeStack = new List<DefaultValueDictionary<StatusChange, OnChangedHandler<TObject>>>();
 			foreach(SourceType type in Enum.GetValues(typeof(SourceType))) {
 				currentRaw[type] = new DefaultValueDictionary<TBaseStatus, int>();
-				sources[type] = new MultiValueDictionary<TBaseStatus, Source<TObject, TBaseStatus>>();
+				sources[type] = new MultiValueDictionary<TBaseStatus, Source<TObject>>();
 				internalFeeds[type] = new Dictionary<TBaseStatus, Dictionary<TBaseStatus, int>>();
 			}
 		}
@@ -84,10 +85,10 @@ namespace Hemlock {
 		/// The SourceType determines whether the Source will feed, suppress, or prevent its status.
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
 		/// </param>
-		public Source<TObject, TBaseStatus> CreateSource(TBaseStatus status, int value = 1, int priority = 0,
+		public Source<TObject> CreateSource(TBaseStatus status, int value = 1, int priority = 0,
 			SourceType type = SourceType.Feed, int? overrideSetIndex = null)
 		{
-			return new Source<TObject, TBaseStatus>(status, value, priority, type, overrideSetIndex);
+			return new Source<TObject>(status, value, priority, type, overrideSetIndex);
 		}
 		/// <summary>
 		/// Conveniently create a Source compatible with this tracker. Does not add the Source to the tracker automatically.
@@ -100,16 +101,16 @@ namespace Hemlock {
 		/// The SourceType determines whether the Source will feed, suppress, or prevent its status.
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
 		/// </param>
-		public Source<TObject, TBaseStatus> CreateSource<TStatus>(TStatus status, int value = 1, int priority = 0,
+		public Source<TObject> CreateSource<TStatus>(TStatus status, int value = 1, int priority = 0,
 			SourceType type = SourceType.Feed, int? overrideSetIndex = null)
 			where TStatus : struct
 		{
-			return new Source<TObject, TBaseStatus>(Convert(status), value, priority, type, overrideSetIndex);
+			return new Source<TObject>(Convert(status), value, priority, type, overrideSetIndex);
 		}
 		/// <summary>
 		/// Add a Source to this tracker, updating the value of the status associated with the given Source.
 		/// </summary>
-		public bool AddSource(Source<TObject, TBaseStatus> source) {
+		public bool AddSource(Source<TObject> source) {
 			if(source == null) throw new ArgumentNullException();
 			if(source.tracker != null && source.tracker != this) throw new InvalidOperationException("Already added to another tracker");
 			TBaseStatus status = source.Status;
@@ -145,10 +146,10 @@ namespace Hemlock {
 		/// The SourceType determines whether the Source will feed, suppress, or prevent its status.
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
 		/// </param>
-		public Source<TObject, TBaseStatus> Add(TBaseStatus status, int value = 1, int priority = 0,
+		public Source<TObject> Add(TBaseStatus status, int value = 1, int priority = 0,
 			SourceType type = SourceType.Feed, int? overrideSetIndex = null)
 		{
-			var source = new Source<TObject, TBaseStatus>(status, value, priority, type, overrideSetIndex);
+			var source = new Source<TObject>(status, value, priority, type, overrideSetIndex);
 			if(AddSource(source)) return source;
 			else return null;
 		}
@@ -164,11 +165,11 @@ namespace Hemlock {
 		/// The SourceType determines whether the Source will feed, suppress, or prevent its status.
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
 		/// </param>
-		public Source<TObject, TBaseStatus> Add<TStatus>(TStatus status, int value = 1, int priority = 0,
+		public Source<TObject> Add<TStatus>(TStatus status, int value = 1, int priority = 0,
 			SourceType type = SourceType.Feed, int? overrideSetIndex = null)
 			where TStatus : struct
 		{
-			var source = new Source<TObject, TBaseStatus>(Convert(status), value, priority, type, overrideSetIndex);
+			var source = new Source<TObject>(Convert(status), value, priority, type, overrideSetIndex);
 			if(AddSource(source)) return source;
 			else return null;
 		}
@@ -176,7 +177,7 @@ namespace Hemlock {
 		/// Remove a Source from this tracker, updating the value of the status associated with the given Source.
 		/// Returns true if successful, or false if the Source wasn't in this tracker.
 		/// </summary>
-		public bool RemoveSource(Source<TObject, TBaseStatus> source) {
+		public bool RemoveSource(Source<TObject> source) {
 			if(source == null) throw new ArgumentNullException();
 			TBaseStatus status = source.Status;
 			SourceType type = source.SourceType;
@@ -202,18 +203,18 @@ namespace Hemlock {
 		/// (This will return the value of this status to zero, unless other statuses are feeding this one.)
 		/// </summary>
 		public void Cancel<TStatus>(TStatus status) where TStatus : struct => Cancel(Convert(status));
-		private OnChangedHandler<TObject, TBaseStatus> GetHandler(TBaseStatus status, bool increased, bool effect) {
-			var change = new StatusChange<TBaseStatus>(status, increased, effect);
-			OnChangedHandler<TObject, TBaseStatus> result;
+		private OnChangedHandler<TObject> GetHandler(TBaseStatus status, bool increased, bool effect) {
+			var change = new StatusChange(status, increased, effect);
+			OnChangedHandler<TObject> result;
 			foreach(var dict in changeStack) {
 				if(dict.TryGetValue(change, out result)) return result;
 			}
 			return null;
 		}
-		internal void CheckSourceChanged(Source<TObject, TBaseStatus> source) {
+		internal void CheckSourceChanged(Source<TObject> source) {
 			bool stacked = source.overrideSetIndex != null;
 			if(stacked) {
-				OverrideSet<TObject, TBaseStatus> overrideSet = rules.overrideSets[source.overrideSetIndex.Value];
+				OverrideSet<TObject> overrideSet = rules.overrideSets[source.overrideSetIndex.Value];
 				if(overrideSet == null) throw new InvalidOperationException($"Override set {source.overrideSetIndex.Value} does not exist");
 				changeStack.Add(overrideSet.onChangedOverrides);
 			}
@@ -224,7 +225,7 @@ namespace Hemlock {
 			bool stacked = false;
 			if(rules.overrideSetsForStatuses.TryGetValue(status, out int overrideSetIndex)) {
 				stacked = true;
-				OverrideSet<TObject, TBaseStatus> overrideSet = rules.overrideSets[overrideSetIndex];
+				OverrideSet<TObject> overrideSet = rules.overrideSets[overrideSetIndex];
 				if(overrideSet == null) throw new InvalidOperationException($"Override set {overrideSetIndex} does not exist");
 				changeStack.Add(overrideSet.onChangedOverrides);
 			}
@@ -272,7 +273,7 @@ namespace Hemlock {
 				UpdateFeed(status, SourceType.Feed, newValue);
 				if(increased) {
 					foreach(TBaseStatus cancelledStatus in rules.statusesCancelledBy[status]) {
-						var pair = new StatusPair<TBaseStatus>(status, cancelledStatus);
+						var pair = new StatusPair(status, cancelledStatus);
 						var condition = rules.cancellationConditions[pair]; // if a condition exists, it must return true for the
 						if(condition == null || condition(newValue)) Cancel(cancelledStatus); // status to be cancelled.
 					}
@@ -284,7 +285,7 @@ namespace Hemlock {
 		private void UpdateFeed(TBaseStatus status, SourceType type, int newValue) {
 			foreach(TBaseStatus fedStatus in rules.statusesFedBy[type][status]) {
 				int newFedValue = newValue;
-				var pair = new StatusPair<TBaseStatus>(status, fedStatus);
+				var pair = new StatusPair(status, fedStatus);
 				Converter conv;
 				if(rules.converters[type].TryGetValue(pair, out conv)) newFedValue = conv(newFedValue);
 				int oldFedValue;
@@ -302,8 +303,5 @@ namespace Hemlock {
 				}
 			}
 		}
-	}
-	public class StatusTracker<TObject> : BaseStatusTracker<TObject, int> {
-		internal StatusTracker(TObject obj, BaseStatusSystem<TObject, int> rules) : base(obj, rules) { }
 	}
 }

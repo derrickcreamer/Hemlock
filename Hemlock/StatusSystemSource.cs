@@ -2,36 +2,39 @@
 using UtilityCollections;
 
 namespace Hemlock {
-	public class OverrideSet<TObject, TBaseStatus> : IHandlers<TObject, TBaseStatus> where TBaseStatus : struct {
-		internal DefaultValueDictionary<StatusChange<TBaseStatus>, OnChangedHandler<TObject, TBaseStatus>> onChangedOverrides;
+
+	using TBaseStatus = System.Int32;
+
+	public class OverrideSet<TObject> : IHandlers<TObject> {
+		internal DefaultValueDictionary<StatusChange, OnChangedHandler<TObject>> onChangedOverrides;
 
 		/// <summary>
 		/// Override message or effect behavior whenever a change in *this* status or source (i.e., the status
 		/// or source which is using this override set) causes a change in *another* status.
 		/// </summary>
 		/// <param name="overridden">The status whose message/effect behavior should be overridden</param>
-		public BaseStatusSystem<TObject, TBaseStatus>.StatusHandlers Overrides(TBaseStatus overridden)
-			=> new BaseStatusSystem<TObject, TBaseStatus>.StatusHandlers(this, default(TBaseStatus), overridden);
+		public StatusSystem<TObject>.StatusHandlers Overrides(TBaseStatus overridden)
+			=> new StatusSystem<TObject>.StatusHandlers(this, default(TBaseStatus), overridden);
 		/// <summary>
 		/// Override message or effect behavior whenever a change in *this* status or source (i.e., the status
 		/// or source which is using this override set) causes a change in *another* status.
 		/// </summary>
 		/// <param name="overridden">The status whose message/effect behavior should be overridden</param>
-		public BaseStatusSystem<TObject, TBaseStatus>.StatusHandlers Overrides<TStatus>(TStatus overridden) where TStatus : struct
-			=> new BaseStatusSystem<TObject, TBaseStatus>.StatusHandlers(this, default(TBaseStatus), Convert(overridden));
-		void IHandlers<TObject, TBaseStatus>.SetHandler(TBaseStatus ignored, TBaseStatus overridden, bool increased, bool effect, OnChangedHandler<TObject, TBaseStatus> handler) {
-			if(onChangedOverrides == null) onChangedOverrides = new DefaultValueDictionary<StatusChange<TBaseStatus>, OnChangedHandler<TObject, TBaseStatus>>();
-			onChangedOverrides[new StatusChange<TBaseStatus>(overridden, increased, effect)] = handler;
+		public StatusSystem<TObject>.StatusHandlers Overrides<TStatus>(TStatus overridden) where TStatus : struct
+			=> new StatusSystem<TObject>.StatusHandlers(this, default(TBaseStatus), Convert(overridden));
+		void IHandlers<TObject>.SetHandler(TBaseStatus ignored, TBaseStatus overridden, bool increased, bool effect, OnChangedHandler<TObject> handler) {
+			if(onChangedOverrides == null) onChangedOverrides = new DefaultValueDictionary<StatusChange, OnChangedHandler<TObject>>();
+			onChangedOverrides[new StatusChange(overridden, increased, effect)] = handler;
 		}
-		OnChangedHandler<TObject, TBaseStatus> IHandlers<TObject, TBaseStatus>.GetHandler(TBaseStatus status, TBaseStatus ignored, bool increased, bool effect) {
+		OnChangedHandler<TObject> IHandlers<TObject>.GetHandler(TBaseStatus status, TBaseStatus ignored, bool increased, bool effect) {
 			if(onChangedOverrides == null) return null;
-			return onChangedOverrides[new StatusChange<TBaseStatus>(status, increased, effect)];
+			return onChangedOverrides[new StatusChange(status, increased, effect)];
 		}
 		protected static TBaseStatus Convert<TStatus>(TStatus status) where TStatus : struct {
 			return StatusConverter<TStatus, TBaseStatus>.Convert(status);
 		}
 	}
-	public class Source<TObject, TBaseStatus> where TBaseStatus : struct {
+	public class Source<TObject> {
 		/// <summary>
 		/// The status to which this Source will add its value
 		/// </summary>
@@ -41,7 +44,7 @@ namespace Hemlock {
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
 		/// </summary>
 		public readonly SourceType SourceType;
-		internal BaseStatusTracker<TObject, TBaseStatus> tracker;
+		internal StatusTracker<TObject> tracker;
 		private int internalValue;
 		/// <summary>
 		/// The value added to this Source's status. If this property is changed after this Source has been added
@@ -67,7 +70,7 @@ namespace Hemlock {
 		/// (For enums, test whether this value is in the defined range for that enum.)
 		/// </summary>
 		public bool TryGetStatus<TStatus>(out TStatus status) where TStatus : struct {
-			if(StatusConverter<TBaseStatus, TStatus>.Convert != null) {
+			if(StatusConverter<TBaseStatus, TStatus>.Convert != null) {//todo?
 				status = StatusConverter<TBaseStatus, TStatus>.Convert(this.Status);
 			}
 			else {
@@ -93,7 +96,7 @@ namespace Hemlock {
 		/// Casts this Source's raw value to a chosen type, regardless of whether it falls into the defined range of enum types.
 		/// </summary>
 		public TStatus GetStatus<TStatus>() {
-			if(StatusConverter<TBaseStatus, TStatus>.Convert != null) {
+			if(StatusConverter<TBaseStatus, TStatus>.Convert != null) {//todo?
 				return StatusConverter<TBaseStatus, TStatus>.Convert(this.Status);
 			}
 			try {
@@ -107,7 +110,7 @@ namespace Hemlock {
 		public int? OverrideSetIndex => overrideSetIndex;
 
 		protected static TBaseStatus Convert<TStatus>(TStatus status) where TStatus : struct {
-			return StatusConverter<TStatus, TBaseStatus>.Convert(status);
+			return StatusConverter<TStatus, TBaseStatus>.Convert(status);//todo? any others?
 		}
 		/// <summary>
 		/// Create a (shallow) copy of this Source. If any non-null arguments are provided to this method,
@@ -117,8 +120,8 @@ namespace Hemlock {
 		/// <param name="priority">If provided, the copy will be created with this priority.</param>
 		/// <param name="type">If provided, the copy will be created with this SourceType.</param>
 		/// <param name="overrideSetIndex">If provided, the copy will be created with this override set index.</param>
-		public Source<TObject, TBaseStatus> Clone(int? value = null, int? priority = null, SourceType? type = null, int? overrideSetIndex = null) {
-			return new Source<TObject, TBaseStatus>(this, value, priority, type, overrideSetIndex);
+		public Source<TObject> Clone(int? value = null, int? priority = null, SourceType? type = null, int? overrideSetIndex = null) {
+			return new Source<TObject>(this, value, priority, type, overrideSetIndex);
 		}
 		/// <param name="status">The status to which this Source will add its value</param>
 		/// <param name="value">The amount by which this Source will increase its status</param>
@@ -135,7 +138,7 @@ namespace Hemlock {
 			SourceType = type;
 			this.overrideSetIndex = overrideSetIndex;
 		}
-		protected Source(Source<TObject, TBaseStatus> copyFrom, int? value = null, int? priority = null, SourceType? type = null, int? overrideSetIndex = null) {
+		protected Source(Source<TObject> copyFrom, int? value = null, int? priority = null, SourceType? type = null, int? overrideSetIndex = null) {
 			if(copyFrom == null) throw new ArgumentNullException("copyFrom");
 			Status = copyFrom.Status;
 			if(value == null) internalValue = copyFrom.internalValue;

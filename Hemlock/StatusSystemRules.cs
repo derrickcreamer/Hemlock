@@ -8,8 +8,9 @@ namespace Hemlock {
 
 	using Aggregator = Func<IEnumerable<int>, int>;
 	using Converter = Func<int, int>;
+	using TBaseStatus = System.Int32; // Using 'TBaseStatus' to clarify the status keys vs the int values
 
-	public static class StatusConverter<T, TResult> {
+	public static class StatusConverter<T, TResult> { //todo T --> int?
 		/// <summary>
 		/// Define a conversion between two types. Hemlock will use this conversion internally.
 		/// </summary>
@@ -25,69 +26,69 @@ namespace Hemlock {
 	/// <summary>
 	/// A method that'll be run when a status changes on "obj".
 	/// </summary>
-	public delegate void OnChangedHandler<TObject, TStatus>(TObject obj, TStatus status, int oldValue, int newValue);
+	public delegate void OnChangedHandler<TObject>(TObject obj, TBaseStatus status, int oldValue, int newValue);
 
-	internal interface IHandlers<TObject, TStatus> {
-		OnChangedHandler<TObject, TStatus> GetHandler(TStatus status, TStatus overridden, bool increased, bool effect);
-		void SetHandler(TStatus status, TStatus overridden, bool increased, bool effect, OnChangedHandler<TObject, TStatus> handler);
+	internal interface IHandlers<TObject> {
+		OnChangedHandler<TObject> GetHandler(TBaseStatus status, TBaseStatus overridden, bool increased, bool effect);
+		void SetHandler(TBaseStatus status, TBaseStatus overridden, bool increased, bool effect, OnChangedHandler<TObject> handler);
 	}
 
-	internal struct StatusPair<TStatus> : IEquatable<StatusPair<TStatus>> where TStatus : struct {
-		public readonly TStatus status1;
-		public readonly TStatus status2; //and now, some boilerplate:
-		public StatusPair(TStatus status1, TStatus status2) {
+	internal struct StatusPair : IEquatable<StatusPair> {
+		public readonly TBaseStatus status1;
+		public readonly TBaseStatus status2; //and now, some boilerplate:
+		public StatusPair(TBaseStatus status1, TBaseStatus status2) {
 			this.status1 = status1;
 			this.status2 = status2;
 		}
-		public override int GetHashCode() { unchecked { return status1.GetHashCode() * 5557 + status2.GetHashCode(); } }
+		public override int GetHashCode() { unchecked { return status1 * 5557 + status2; } }
 		public override bool Equals(object other) {
-			if(other is StatusPair<TStatus>) return Equals((StatusPair<TStatus>)other);
+			if(other is StatusPair) return Equals((StatusPair)other);
 			else return false;
 		}
-		public bool Equals(StatusPair<TStatus> other) => status1.Equals(other.status1) && status2.Equals(other.status2);
+		public bool Equals(StatusPair other) => status1.Equals(other.status1) && status2.Equals(other.status2);
 	}
 
-	internal struct StatusChange<TStatus> : IEquatable<StatusChange<TStatus>> where TStatus : struct {
-		public readonly TStatus status;
+	internal struct StatusChange : IEquatable<StatusChange> {
+		public readonly TBaseStatus status;
 		public readonly bool increased;
 		public readonly bool effect;
-		public StatusChange(TStatus status, bool increased, bool effect) {
+		public StatusChange(TBaseStatus status, bool increased, bool effect) {
 			this.status = status;
 			this.increased = increased;
 			this.effect = effect;
 		}
 		public override int GetHashCode() {
 			unchecked {
-				int hash = status.GetHashCode() + 857;
+				int hash = status + 857;
 				if(increased) hash *= 7919;
 				if(effect) hash *= 523;
 				return hash;
 			}
 		}
 		public override bool Equals(object other) {
-			if(other is StatusChange<TStatus>) return Equals((StatusChange<TStatus>)other);
+			if(other is StatusChange) return Equals((StatusChange)other);
 			else return false;
 		}
-		public bool Equals(StatusChange<TStatus> other) => status.Equals(other.status) && increased == other.increased && effect == other.effect;
+		public bool Equals(StatusChange other) => status.Equals(other.status) && increased == other.increased && effect == other.effect;
 	}
 
-	public class BaseStatusSystem<TObject, TBaseStatus> : IHandlers<TObject, TBaseStatus> where TBaseStatus : struct {
+	public class StatusSystem<TObject> : IHandlers<TObject> {
 		public class HandlerRules {
-			private IHandlers<TObject, TBaseStatus> handlers;
+			private IHandlers<TObject> handlers;
 			private TBaseStatus status;
 			private TBaseStatus overridden;
 			private bool effect;
 			/// <summary>
 			/// The method that'll be invoked in response to an increased value for this status
 			/// </summary>
-			public OnChangedHandler<TObject, TBaseStatus> Increased {
+			public OnChangedHandler<TObject> Increased {
 				get { return handlers.GetHandler(status, overridden, true, effect); }
 				set { handlers.SetHandler(status, overridden, true, effect, value); }
 			}
 			/// <summary>
 			/// The method that'll be invoked in response to a decreased value for this status
 			/// </summary>
-			public OnChangedHandler<TObject, TBaseStatus> Decreased {
+			public OnChangedHandler<TObject> Decreased {
 				get { return handlers.GetHandler(status, overridden, false, effect); }
 				set { handlers.SetHandler(status, overridden, false, effect, value); }
 			}
@@ -95,13 +96,13 @@ namespace Hemlock {
 			/// This property is simply a convenient way to set both Increased and Decreased at the same time.
 			/// (Therefore, if Changed is set, that method will be invoked in response to any change in value for this status.)
 			/// </summary>
-			public OnChangedHandler<TObject, TBaseStatus> Changed {
+			public OnChangedHandler<TObject> Changed {
 				set {
 					handlers.SetHandler(status, overridden, true, effect, value);
 					handlers.SetHandler(status, overridden, false, effect, value);
 				}
 			}
-			internal HandlerRules(IHandlers<TObject, TBaseStatus> handlers, TBaseStatus status, TBaseStatus overridden, bool effect) {
+			internal HandlerRules(IHandlers<TObject> handlers, TBaseStatus status, TBaseStatus overridden, bool effect) {
 				this.handlers = handlers;
 				this.status = status;
 				this.overridden = overridden;
@@ -117,21 +118,21 @@ namespace Hemlock {
 			/// Add "effect" methods to be invoked in response to status value changes.
 			/// </summary>
 			public readonly HandlerRules Effects;
-			internal StatusHandlers(IHandlers<TObject, TBaseStatus> handlers, TBaseStatus status, TBaseStatus overridden) {
+			internal StatusHandlers(IHandlers<TObject> handlers, TBaseStatus status, TBaseStatus overridden) {
 				Messages = new HandlerRules(handlers, status, overridden, false);
 				Effects = new HandlerRules(handlers, status, overridden, true);
 			}
 		}
 		public class StatusRules : StatusHandlers {
-			protected BaseStatusSystem<TObject, TBaseStatus> rules;
+			protected StatusSystem<TObject> rules;
 			protected TBaseStatus status;
 			protected static TBaseStatus Convert<TStatus>(TStatus status) where TStatus : struct {
-				return BaseStatusSystem<TObject, TBaseStatus>.Convert(status);
+				return StatusSystem<TObject>.Convert(status);
 			}
 			protected static TBaseStatus[] Convert<TStatus>(TStatus[] statuses) where TStatus : struct {
 				if(statuses == null) return null;
 				var result = new TBaseStatus[statuses.Length];
-				for(int i=0;i<statuses.Length;++i) result[i] = BaseStatusSystem<TObject, TBaseStatus>.Convert(statuses[i]);
+				for(int i=0;i<statuses.Length;++i) result[i] = StatusSystem<TObject>.Convert(statuses[i]);
 				return result;
 			}
 			/// <summary>
@@ -219,7 +220,7 @@ namespace Hemlock {
 				if(cancelledStatuses.Length == 0) throw new ArgumentException(StatusExpected);
 				foreach(TBaseStatus cancelled in cancelledStatuses) {
 					rules.statusesCancelledBy.AddUnique(status, cancelled);
-					if(condition != null) rules.cancellationConditions[new StatusPair<TBaseStatus>(status, cancelled)] = condition;
+					if(condition != null) rules.cancellationConditions[new StatusPair(status, cancelled)] = condition;
 				}
 			}
 			/// <summary>
@@ -409,7 +410,7 @@ namespace Hemlock {
 				foreach(TBaseStatus fedStatus in fedStatuses) {
 					rules.statusesFedBy[type].AddUnique(status, fedStatus);
 					if(converter != null) {
-						var pair = new StatusPair<TBaseStatus>(status, fedStatus);
+						var pair = new StatusPair(status, fedStatus);
 						rules.converters[type][pair] = converter;
 					}
 				}
@@ -422,7 +423,7 @@ namespace Hemlock {
 			public void PreventedWhen(Func<TObject, TBaseStatus, bool> preventionCondition) {
 				rules.extraPreventionConditions.AddUnique(status, preventionCondition);
 			}
-			internal StatusRules(BaseStatusSystem<TObject, TBaseStatus> rules, TBaseStatus status) : base(rules, status, status) {
+			internal StatusRules(StatusSystem<TObject> rules, TBaseStatus status) : base(rules, status, status) {
 				this.rules = rules;
 				this.status = status;
 			}
@@ -455,16 +456,16 @@ namespace Hemlock {
 
 		internal Dictionary<SourceType, MultiValueDictionary<TBaseStatus, TBaseStatus>> statusesFedBy;
 
-		internal Dictionary<SourceType, Dictionary<StatusPair<TBaseStatus>, Converter>> converters;
+		internal Dictionary<SourceType, Dictionary<StatusPair, Converter>> converters;
 		internal void ValidateConverter(Converter conv) {
 			if(conv(0) != 0) throw new ArgumentException("Converters must output 0 when input is 0.");
 		}
-		internal DefaultValueDictionary<StatusPair<TBaseStatus>, Func<int, bool>> cancellationConditions;
+		internal DefaultValueDictionary<StatusPair, Func<int, bool>> cancellationConditions;
 
 		/// <summary>
 		/// This handler can be used with overrides to hide a default message or effect.
 		/// </summary>
-		public readonly OnChangedHandler<TObject, TBaseStatus> DoNothing;
+		public readonly OnChangedHandler<TObject> DoNothing;
 		/// <summary>
 		/// The default aggregator. Adds all the values together.
 		/// </summary>
@@ -478,7 +479,7 @@ namespace Hemlock {
 		/// </summary>
 		public readonly Aggregator MaximumOrZero;
 
-		internal DefaultValueDictionary<TBaseStatus, DefaultValueDictionary<StatusChange<TBaseStatus>, OnChangedHandler<TObject, TBaseStatus>>> onChangedHandlers;
+		internal DefaultValueDictionary<TBaseStatus, DefaultValueDictionary<StatusChange, OnChangedHandler<TObject>>> onChangedHandlers;
 		internal MultiValueDictionary<TBaseStatus, Func<TObject, TBaseStatus, bool>> extraPreventionConditions;
 
 		internal Aggregator GetAggregator(TBaseStatus status, SourceType type) {
@@ -488,21 +489,21 @@ namespace Hemlock {
 			}
 			return defaultAggs[type];
 		}
-		void IHandlers<TObject, TBaseStatus>.SetHandler(TBaseStatus status, TBaseStatus overridden, bool increased, bool effect, OnChangedHandler<TObject, TBaseStatus> handler) {
+		void IHandlers<TObject>.SetHandler(TBaseStatus status, TBaseStatus overridden, bool increased, bool effect, OnChangedHandler<TObject> handler) {
 			if(!onChangedHandlers.ContainsKey(status)) {
-				onChangedHandlers.Add(status, new DefaultValueDictionary<StatusChange<TBaseStatus>, OnChangedHandler<TObject, TBaseStatus>>());
+				onChangedHandlers.Add(status, new DefaultValueDictionary<StatusChange, OnChangedHandler<TObject>>());
 			}
-			onChangedHandlers[status][new StatusChange<TBaseStatus>(overridden, increased, effect)] = handler;
+			onChangedHandlers[status][new StatusChange(overridden, increased, effect)] = handler;
 		}
-		OnChangedHandler<TObject, TBaseStatus> IHandlers<TObject, TBaseStatus>.GetHandler(TBaseStatus status, TBaseStatus overridden, bool increased, bool effect) {
+		OnChangedHandler<TObject> IHandlers<TObject>.GetHandler(TBaseStatus status, TBaseStatus overridden, bool increased, bool effect) {
 			if(!onChangedHandlers.ContainsKey(status)) return null;
-			return onChangedHandlers[status][new StatusChange<TBaseStatus>(overridden, increased, effect)];
+			return onChangedHandlers[status][new StatusChange(overridden, increased, effect)];
 		}
 
-		internal DefaultValueDictionary<int, OverrideSet<TObject, TBaseStatus>> overrideSets;
+		internal DefaultValueDictionary<int, OverrideSet<TObject>> overrideSets;
 
-		public OverrideSet<TObject, TBaseStatus> GetOverrideSet(int index) {
-			if(!overrideSets.ContainsKey(index)) overrideSets[index] = new OverrideSet<TObject, TBaseStatus>();
+		public OverrideSet<TObject> GetOverrideSet(int index) {
+			if(!overrideSets.ContainsKey(index)) overrideSets[index] = new OverrideSet<TObject>();
 			return overrideSets[index];
 		}
 
@@ -526,7 +527,7 @@ namespace Hemlock {
 		protected void CheckRuleErrors() {
 			if(!IgnoreRuleErrors) {
 				VerifyConversions();
-				var ruleChecker = new RuleChecker<TObject, TBaseStatus>(this);
+				var ruleChecker = new RuleChecker<TObject>(this);
 				var errorList = ruleChecker.GetErrors(false);
 				if(errorList.Count > 0) {
 					throw new InvalidDataException("Illegal rules detected:     \r\n" + string.Join("     \r\n", errorList));
@@ -543,7 +544,7 @@ namespace Hemlock {
 		/// </summary>
 		public List<string> GetRuleErrorsAndWarnings() {
 			VerifyConversions();
-			var ruleChecker = new RuleChecker<TObject, TBaseStatus>(this);
+			var ruleChecker = new RuleChecker<TObject>(this);
 			return ruleChecker.GetErrors(true);
 		}
 
@@ -552,8 +553,8 @@ namespace Hemlock {
 		/// Rules will be checked for errors when the first tracker is created (unless IgnoreRuleErrors is set to true).
 		/// </summary>
 		/// <param name="obj">The object associated with the newly created tracker (i.e., the tracker's "owner")</param>
-		public BaseStatusTracker<TObject, TBaseStatus> CreateStatusTracker(TObject obj) {
-			return new BaseStatusTracker<TObject, TBaseStatus>(obj, this);
+		public StatusTracker<TObject> CreateStatusTracker(TObject obj) {
+			return new StatusTracker<TObject>(obj, this);
 		}
 		/// <summary>
 		/// Conveniently create a Source compatible with all trackers spawned from this object.
@@ -566,10 +567,10 @@ namespace Hemlock {
 		/// The SourceType determines whether the Source will feed, suppress, or prevent its status.
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
 		/// </param>
-		public Source<TObject, TBaseStatus> CreateSource(TBaseStatus status, int value = 1, int priority = 0,
+		public Source<TObject> CreateSource(TBaseStatus status, int value = 1, int priority = 0,
 			SourceType type = SourceType.Feed, int? overrideSetIndex = null)
 		{
-			return new Source<TObject, TBaseStatus>(status, value, priority, type, overrideSetIndex);
+			return new Source<TObject>(status, value, priority, type, overrideSetIndex);
 		}
 		/// <summary>
 		/// Conveniently create a Source compatible with all trackers spawned from this object.
@@ -582,11 +583,11 @@ namespace Hemlock {
 		/// The SourceType determines whether the Source will feed, suppress, or prevent its status.
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
 		/// </param>
-		public Source<TObject, TBaseStatus> CreateSource<TStatus>(TStatus status, int value = 1, int priority = 0,
+		public Source<TObject> CreateSource<TStatus>(TStatus status, int value = 1, int priority = 0,
 			SourceType type = SourceType.Feed, int? overrideSetIndex = null)
 			where TStatus : struct
 		{
-			return new Source<TObject, TBaseStatus>(Convert(status), value, priority, type, overrideSetIndex);
+			return new Source<TObject>(Convert(status), value, priority, type, overrideSetIndex);
 		}
 		protected static TBaseStatus Convert<TStatus>(TStatus status) where TStatus : struct {
 			try {
@@ -610,7 +611,7 @@ namespace Hemlock {
 				}
 			});
 		}
-		public BaseStatusSystem() {
+		public StatusSystem() {
 			requiredConversionChecks = new List<Action>();
 			extraEnumTypes = new List<Type>();
 			DoNothing = (obj, status, ov, nv) => { };
@@ -640,24 +641,16 @@ namespace Hemlock {
 			statusesExtendedBy = new MultiValueDictionary<TBaseStatus, TBaseStatus>();
 			statusesThatExtend = new MultiValueDictionary<TBaseStatus, TBaseStatus>();
 			statusesFedBy = new Dictionary<SourceType, MultiValueDictionary<TBaseStatus, TBaseStatus>>();
-			converters = new Dictionary<SourceType, Dictionary<StatusPair<TBaseStatus>, Func<int, int>>>();
-			cancellationConditions = new DefaultValueDictionary<StatusPair<TBaseStatus>, Func<int, bool>>();
+			converters = new Dictionary<SourceType, Dictionary<StatusPair, Func<int, int>>>();
+			cancellationConditions = new DefaultValueDictionary<StatusPair, Func<int, bool>>();
 			foreach(SourceType type in Enum.GetValues(typeof(SourceType))) {
 				statusesFedBy[type] = new MultiValueDictionary<TBaseStatus, TBaseStatus>();
-				converters[type] = new Dictionary<StatusPair<TBaseStatus>, Func<int, int>>();
+				converters[type] = new Dictionary<StatusPair, Func<int, int>>();
 			}
-			onChangedHandlers = new DefaultValueDictionary<TBaseStatus, DefaultValueDictionary<StatusChange<TBaseStatus>, OnChangedHandler<TObject, TBaseStatus>>>();
+			onChangedHandlers = new DefaultValueDictionary<TBaseStatus, DefaultValueDictionary<StatusChange, OnChangedHandler<TObject>>>();
 			extraPreventionConditions = new MultiValueDictionary<TBaseStatus, Func<TObject, TBaseStatus, bool>>();
-			overrideSets = new DefaultValueDictionary<int, OverrideSet<TObject, TBaseStatus>>();
+			overrideSets = new DefaultValueDictionary<int, OverrideSet<TObject>>();
 			overrideSetsForStatuses = new DefaultValueDictionary<TBaseStatus, int>();
 		}
-	}
-	public class StatusSystem<TObject> : BaseStatusSystem<TObject, int> {
-		/// <summary>
-		/// Create a status tracker that'll use the rules already defined.
-		/// Rules will be checked for errors when the first tracker is created (unless IgnoreRuleErrors is set to true).
-		/// </summary>
-		/// <param name="obj">The object associated with the newly created tracker (i.e., the tracker's "owner")</param>
-		new public StatusTracker<TObject> CreateStatusTracker(TObject obj) => new StatusTracker<TObject>(obj, this);
 	}
 }

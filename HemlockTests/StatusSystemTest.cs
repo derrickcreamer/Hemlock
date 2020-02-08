@@ -37,13 +37,13 @@ namespace HemlockTests {
 			[TestCase] public void BasicSourceOperations() {
 				Assert.Throws<ArgumentNullException>(()=> tracker.AddSource(null));
 				Assert.Throws<ArgumentNullException>(() => tracker.RemoveSource(null));
-				Source<TestObj, int> s = new Source<TestObj, int>((int)TestStatus.E, value: 2); // (method #1 of creating Sources)
+				Source<TestObj> s = new Source<TestObj>((int)TestStatus.E, value: 2); // (method #1 of creating Sources)
 				Assert.AreEqual(0, tracker[TestStatus.E]);
 				tracker.AddSource(s);
 				Assert.AreEqual(2, tracker[TestStatus.E]);
 				s.Value = 7;
 				Assert.AreEqual(7, tracker[TestStatus.E]);
-				Source<TestObj, int> s2 = tracker.CreateSource(TestStatus.E, value: 6); // (method #2 of creating Sources)
+				Source<TestObj> s2 = tracker.CreateSource(TestStatus.E, value: 6); // (method #2 of creating Sources)
 				tracker.AddSource(s2);
 				Assert.AreEqual(13, tracker[TestStatus.E]);
 				tracker.RemoveSource(s);
@@ -76,27 +76,21 @@ namespace HemlockTests {
 				tracker[TestStatus.D] = 11;
 				Assert.AreEqual(11, tracker[TestStatus.AlsoD]);
 			}
-			[TestCase] public void NonIntBaseStatus() {
-				BaseStatusSystem<TestObj, char> charRules = new BaseStatusSystem<TestObj, char>();
-				BaseStatusTracker<TestObj, char> charTracker = charRules.CreateStatusTracker(testObj);
-				charTracker.Add('@');
-				Assert.AreEqual(1, charTracker['@']);
-			}
 			[TestCase] public void TryGetValue() {
-				var source = new Source<TestObj, int>(7); // 7 is defined for TestStatus
+				var source = new Source<TestObj>(7); // 7 is defined for TestStatus
 				TestStatus status;
 				Assert.True(source.TryGetStatus(out status));
 				Assert.AreEqual(TestStatus.D, status);
 
-				var source2 = new Source<TestObj, int>(8); // 8 is not defined for TestStatus
+				var source2 = new Source<TestObj>(8); // 8 is not defined for TestStatus
 				Assert.False(source2.TryGetStatus(out status)); // Returns false, no exception
 			}
 			[TestCase]
 			public void GetValue() {
-				var source = new Source<TestObj, int>(7); // 7 is defined for TestStatus
+				var source = new Source<TestObj>(7); // 7 is defined for TestStatus
 				Assert.AreEqual(TestStatus.D, source.GetStatus<TestStatus>());
 
-				var source2 = new Source<TestObj, int>(8); // 8 is not defined for TestStatus
+				var source2 = new Source<TestObj>(8); // 8 is not defined for TestStatus
 				Assert.AreEqual((TestStatus)8, source2.GetStatus<TestStatus>());
 			}
 		}
@@ -176,9 +170,9 @@ namespace HemlockTests {
 				rules[TestStatus.A].PreventedWhen((obj, status) => obj != testObj); // only testObj can receive status.A
 				TestObj testObj2 = new TestObj();
 				var tracker2 = rules.CreateStatusTracker(testObj2);
-				tracker.AddSource(new Source<TestObj, int>((int)TestStatus.A, 3));
+				tracker.AddSource(new Source<TestObj>((int)TestStatus.A, 3));
 				Assert.AreEqual(3, tracker[TestStatus.A]); // not prevented for testObj
-				tracker2.AddSource(new Source<TestObj, int>((int)TestStatus.A, 3));
+				tracker2.AddSource(new Source<TestObj>((int)TestStatus.A, 3));
 				Assert.AreEqual(0, tracker2[TestStatus.A]); // prevented for testObj2
 			}
 			[TestCase] public void Cancels() {
@@ -209,10 +203,10 @@ namespace HemlockTests {
 				rules[TestStatus.A].Messages.Decreased = (obj, st, ov, nv) => {
 					message = "Status A is no longer true";
 				};
-				var s = new Source<TestObj, int>[4];
+				var s = new Source<TestObj>[4];
 				for(int i=0;i<4;++i) {
 					int ii = i;
-					s[i] = new Source<TestObj, int>((int)TestStatus.A, priority: ii*ii, overrideSetIndex: i); //0, 1, 4, & 9 priority
+					s[i] = new Source<TestObj>((int)TestStatus.A, priority: ii*ii, overrideSetIndex: i); //0, 1, 4, & 9 priority
 					
 					rules.GetOverrideSet(i).Overrides(TestStatus.A).Messages.Decreased = (obj, st, ov, nv) => {
 						message = $"Status A is no longer true: Source {ii}";
@@ -306,7 +300,7 @@ namespace HemlockTests {
 				rules.GetOverrideSet(0).Overrides(TestStatus.A).Messages.Changed = (obj, status, oldValue, newValue) => {
 					message = "Status A changed because of status B changing";
 				};
-				var s = new Source<TestObj, int>((int)TestStatus.B, overrideSetIndex: 0);
+				var s = new Source<TestObj>((int)TestStatus.B, overrideSetIndex: 0);
 				tracker.AddSource(s);
 				Assert.AreEqual("Status A changed because of status B changing", message);
 				Assert.AreEqual(null, messagePart2); // The original change message for A did not happen at all
@@ -521,7 +515,7 @@ namespace HemlockTests {
 				Assert.AreEqual(0, pTracker[RPS.Rock]); // Red fed Paper which cancelled Rock.
 			}
 			[TestCase] public void SingleStatusParserOperations() {
-				var baseRules = new BaseStatusSystem<TestObj, RGB>();
+				var baseRules = new StatusSystem<TestObj, RGB>();
 				baseRules.ParseRulesText(rgb1);
 				var baseTracker = baseRules.CreateStatusTracker(testObj);
 				baseTracker.Add(RGB.Green, 3);

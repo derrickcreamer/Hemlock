@@ -6,13 +6,14 @@ using System.Collections.Generic;
 using System.Reflection;
 
 namespace Hemlock {
+
+	using TBaseStatus = System.Int32;
+
 	public static class StatusParser {
 		/// <summary>
 		/// Open "<paramref name="filename"/>" and parse its text as rules. Apply the parsed rules to "<paramref name="rules"/>".
 		/// </summary>
-		public static BaseStatusSystem<TObject, TBaseStatus> ParseRulesText<TObject, TBaseStatus>(
-			this BaseStatusSystem<TObject, TBaseStatus> rules, string filename) where TBaseStatus : struct
-		{
+		public static StatusSystem<TObject> ParseRulesText<TObject>(this StatusSystem<TObject> rules, string filename) {
 			if(!File.Exists(filename)) throw new FileNotFoundException($"{filename} cannot be found here.");
 			List<string> text = new List<string>();
 			using(StreamReader stream = new StreamReader(filename)) {
@@ -27,10 +28,8 @@ namespace Hemlock {
 		/// <summary>
 		/// Parse "<paramref name="text"/>" as rules. Apply the parsed rules to "<paramref name="rules"/>".
 		/// </summary>
-		public static BaseStatusSystem<TObject, TBaseStatus> ParseRulesText<TObject, TBaseStatus>(
-			this BaseStatusSystem<TObject, TBaseStatus> rules, IEnumerable<string> text) where TBaseStatus : struct
-		{
-			new StatusParserInternal<TObject, TBaseStatus>(rules, Tokenize(text)).Parse();
+		public static StatusSystem<TObject> ParseRulesText<TObject>(this StatusSystem<TObject> rules, IEnumerable<string> text) {
+			new StatusParserInternal<TObject>(rules, Tokenize(text)).Parse();
 			return rules;
 		}
 		private static List<string> Tokenize(IEnumerable<string> text) {
@@ -70,15 +69,15 @@ namespace Hemlock {
 		}
 	}
 
-	internal class StatusParserInternal<TObject, TBaseStatus> where TBaseStatus : struct {
-		BaseStatusSystem<TObject, TBaseStatus> rules;
+	internal class StatusParserInternal<TObject> {
+		StatusSystem<TObject> rules;
 		List<string> tokens;
 		int idx;
 		string rulesDefaultAggregator;
 		string parserDefaultAggregator;
 		string parserDefaultSourceLimit;
 		List<Type> extraEnums;
-		internal StatusParserInternal(BaseStatusSystem<TObject, TBaseStatus> rules, List<string> tokens) {
+		internal StatusParserInternal(StatusSystem<TObject> rules, List<string> tokens) {
 			this.rules = rules;
 			this.tokens = tokens;
 			extraEnums = rules.extraEnumTypes;
