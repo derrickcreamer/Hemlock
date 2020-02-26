@@ -207,7 +207,7 @@ namespace HemlockTests {
 				for(int i=0;i<4;++i) {
 					int ii = i;
 					s[i] = new Source<TestObj>((int)TestStatus.A, priority: ii*ii, overrideSetIndex: i); //0, 1, 4, & 9 priority
-					
+
 					rules.GetOverrideSet(i).Overrides(TestStatus.A).Messages.Decreased = (obj, st, ov, nv) => {
 						message = $"Status A is no longer true: Source {ii}";
 					};
@@ -559,6 +559,74 @@ namespace HemlockTests {
 				Assert.Throws<InvalidDataException>(() => pRules.ParseRulesText(new List<string> { "c!=5 feeds d 3" }));
 				Assert.Throws<InvalidDataException>(() => pRules.ParseRulesText(new List<string> { "c<=5 feeds d 3" }));
 				Assert.Throws<InvalidDataException>(() => pRules.ParseRulesText(new List<string> { "c<5 feeds d 3" }));
+			}
+		}
+		[TestFixture] public class Serialization : StatusSystemTest {
+			private void SerializeCallback(System.IO.BinaryWriter writer, Source<TestObj> instance, StatusTracker<TestObj> tracker) {
+				writer.Write("hello");
+				writer.Write(true);
+			}
+			private Source<TestObj> deserializedInstanceA;
+			private void DeserializeCallback(System.IO.BinaryReader reader, Source<TestObj> instance, TestObj obj) {
+				Assert.AreEqual("hello", reader.ReadString());
+				Assert.AreEqual(true, reader.ReadBoolean());
+				if(instance.GetStatus<TestStatus>() == TestStatus.A){
+					deserializedInstanceA = instance;
+				}
+			}
+			[TestCase] public void SerializeWithCallback() {
+				rules[TestStatus.A].Feeds(TestStatus.B);
+				rules[TestStatus.B].Suppresses(TestStatus.C);
+				rules[TestStatus.B].Aggregator = rules.Bool;
+				tracker.Add(TestStatus.A, 2);
+				tracker.Add(TestStatus.C, 1); // A==2, B==1, C==0
+
+				byte[] bytes;
+				using(System.IO.MemoryStream stream = new MemoryStream()) {
+					tracker.Serialize(stream, SerializeCallback);
+					bytes = stream.ToArray();
+				}
+				Assert.IsNull(deserializedInstanceA);
+				StatusTracker<TestObj, TestStatus> tracker2;
+				using(System.IO.MemoryStream stream = new MemoryStream(bytes)) {
+					tracker2 = rules.CreateStatusTracker(testObj);
+					tracker2.Deserialize(stream, DeserializeCallback);
+				}
+				Assert.IsNotNull(deserializedInstanceA);
+				Assert.AreEqual(2, tracker2[TestStatus.A]);
+				Assert.AreEqual(1, tracker2[TestStatus.B]);
+				Assert.AreEqual(0, tracker2[TestStatus.C]);
+				deserializedInstanceA.Value = 7; // Make sure that it still responds properly to instance value changes.
+				Assert.AreEqual(7, tracker2[TestStatus.A]);
+				deserializedInstanceA = null; //cleanup to be safe
+			}
+			[TestCase] public void BytesMatchAfterRoundTrip() {
+				rules[TestStatus.A].Feeds(TestStatus.B);
+				rules[TestStatus.B].Suppresses(TestStatus.C);
+				rules[TestStatus.B].Aggregator = rules.Bool;
+				tracker.Add(TestStatus.A, 2);
+				tracker.Add(TestStatus.C, 1); // A==2, B==1, C==0
+
+				byte[] bytes;
+				using(System.IO.MemoryStream stream = new MemoryStream()) {
+					tracker.Serialize(stream);
+
+					bytes = stream.ToArray();
+				}
+				StatusTracker<TestObj, TestStatus> tracker2;
+				using(System.IO.MemoryStream stream = new MemoryStream(bytes)) {
+					tracker2 = rules.CreateStatusTracker(testObj);
+					tracker2.Deserialize(stream);
+				}
+				byte[] bytes2;
+				using(System.IO.MemoryStream stream = new MemoryStream()) {
+					tracker2.Serialize(stream);
+					bytes2 = stream.ToArray();
+				}
+				Assert.AreEqual(bytes.Length, bytes2.Length, "Byte array lengths did not match");
+				for(int i=0;i<bytes.Length;++i){
+					Assert.AreEqual(bytes[i], bytes2[i], $"Byte array differs at index {i}");
+				}
 			}
 		}
 	}

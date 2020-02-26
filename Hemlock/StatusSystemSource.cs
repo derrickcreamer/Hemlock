@@ -70,7 +70,7 @@ namespace Hemlock {
 		/// (For enums, test whether this value is in the defined range for that enum.)
 		/// </summary>
 		public bool TryGetStatus<TStatus>(out TStatus status) where TStatus : struct {
-			if(StatusConverter<TBaseStatus, TStatus>.Convert != null) {//todo?
+			if(StatusConverter<TBaseStatus, TStatus>.Convert != null) {
 				status = StatusConverter<TBaseStatus, TStatus>.Convert(this.Status);
 			}
 			else {
@@ -96,7 +96,7 @@ namespace Hemlock {
 		/// Casts this Source's raw value to a chosen type, regardless of whether it falls into the defined range of enum types.
 		/// </summary>
 		public TStatus GetStatus<TStatus>() {
-			if(StatusConverter<TBaseStatus, TStatus>.Convert != null) {//todo?
+			if(StatusConverter<TBaseStatus, TStatus>.Convert != null) {
 				return StatusConverter<TBaseStatus, TStatus>.Convert(this.Status);
 			}
 			try {
@@ -109,9 +109,6 @@ namespace Hemlock {
 		internal int? overrideSetIndex;
 		public int? OverrideSetIndex => overrideSetIndex;
 
-		protected static TBaseStatus Convert<TStatus>(TStatus status) where TStatus : struct {
-			return StatusConverter<TStatus, TBaseStatus>.Convert(status);//todo? any others?
-		}
 		/// <summary>
 		/// Create a (shallow) copy of this Source. If any non-null arguments are provided to this method,
 		/// those values will be used in the copy.

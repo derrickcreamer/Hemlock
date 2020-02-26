@@ -74,6 +74,165 @@ namespace Hemlock {
 				internalFeeds[type] = new Dictionary<TBaseStatus, Dictionary<TBaseStatus, int>>();
 			}
 		}
+		/// <param name="stream">Serialize to this stream. The stream will NOT be automatically closed.</param>
+		/// <param name="statusInstanceCallback">
+		/// This optional method will be called after a status instance inside this StatusTracker is serialized,
+		/// so that the calling code can serialize any required additional data associated with it.
+		/// (Note that the underlying stream is accessible in the callback through the BinaryWriter.BaseStream property.)
+		/// </param>
+		public void Serialize(System.IO.Stream stream, Action<System.IO.BinaryWriter, Source<TObject>, StatusTracker<TObject>> statusInstanceCallback = null){
+			using(var writer = new System.IO.BinaryWriter(stream, System.Text.Encoding.UTF8, true)){
+				Serialize(writer, statusInstanceCallback);
+			}
+		}
+		/// <param name="writer">Serialize using this BinaryWriter. The underlying stream will NOT be automatically closed.</param>
+		/// <param name="statusInstanceCallback">
+		/// This optional method will be called after a status instance inside this StatusTracker is serialized,
+		/// so that the calling code can serialize any required additional data associated with it.
+		/// (Note that the underlying stream is accessible in the callback through the BinaryWriter.BaseStream property.)
+		/// </param>
+		public void Serialize(System.IO.BinaryWriter writer, Action<System.IO.BinaryWriter, Source<TObject>, StatusTracker<TObject>> statusInstanceCallback = null){
+			if(changeStack.Count > 0) throw new InvalidOperationException("Cannot serialize while status values are being updated.");
+			if(writer == null) throw new ArgumentNullException(nameof(writer));
+			writer.Write(GenerateNoEffects);
+			writer.Write(GenerateNoMessages);
+			writer.Write(currentActualValues.Count);
+			foreach(KeyValuePair<TBaseStatus, int> pair in currentActualValues){
+				writer.Write(pair.Key);
+				writer.Write(pair.Value);
+			}
+			SerializeCurrentRaw(SourceType.Feed, writer);
+			SerializeCurrentRaw(SourceType.Prevent, writer);
+			SerializeCurrentRaw(SourceType.Suppress, writer);
+			SerializeStatusInstances(SourceType.Feed, writer, statusInstanceCallback);
+			SerializeStatusInstances(SourceType.Prevent, writer, statusInstanceCallback);
+			SerializeStatusInstances(SourceType.Suppress, writer, statusInstanceCallback);
+			SerializeInternalFeeds(SourceType.Feed, writer);
+			SerializeInternalFeeds(SourceType.Prevent, writer);
+			SerializeInternalFeeds(SourceType.Suppress, writer);
+		}
+		/// <param name="stream">Deserialize from this stream. The stream will NOT be automatically closed.</param>
+		/// <param name="statusInstanceCallback">
+		/// This optional method will be called after a status instance inside this StatusTracker is deserialized,
+		/// so that the calling code can deserialize any additional data it previously serialized.
+		/// (Note that the underlying stream is accessible in the callback through the BinaryReader.BaseStream property.)
+		/// </param>
+		public void Deserialize(System.IO.Stream stream, Action<System.IO.BinaryReader, Source<TObject>, TObject> statusInstanceCallback = null){
+			using(var reader = new System.IO.BinaryReader(stream, System.Text.Encoding.UTF8, true)){
+				Deserialize(reader, statusInstanceCallback);
+			}
+		}
+		/// <param name="reader">Deserialize from this BinaryReader. The underlying stream will NOT be automatically closed.</param>
+		/// <param name="statusInstanceCallback">
+		/// This optional method will be called after a status instance inside this StatusTracker is deserialized,
+		/// so that the calling code can deserialize any additional data it previously serialized.
+		/// (Note that the underlying stream is accessible in the callback through the BinaryReader.BaseStream property.)
+		/// </param>
+		public void Deserialize(System.IO.BinaryReader reader, Action<System.IO.BinaryReader, Source<TObject>, TObject> statusInstanceCallback = null){
+			if(reader == null) throw new ArgumentNullException(nameof(reader));
+			GenerateNoEffects = reader.ReadBoolean();
+			GenerateNoMessages = reader.ReadBoolean();
+			int currentActualCount = reader.ReadInt32();
+			for(int i=0;i<currentActualCount;++i){
+				int key = reader.ReadInt32();
+				int value = reader.ReadInt32();
+				currentActualValues.Add(key, value);
+			}
+			DeserializeCurrentRaw(currentRaw[SourceType.Feed], reader);
+			DeserializeCurrentRaw(currentRaw[SourceType.Prevent], reader);
+			DeserializeCurrentRaw(currentRaw[SourceType.Suppress], reader);
+			DeserializeStatusInstances(sources[SourceType.Feed], reader, statusInstanceCallback);
+			DeserializeStatusInstances(sources[SourceType.Prevent], reader, statusInstanceCallback);
+			DeserializeStatusInstances(sources[SourceType.Suppress], reader, statusInstanceCallback);
+			DeserializeInternalFeeds(internalFeeds[SourceType.Feed], reader);
+			DeserializeInternalFeeds(internalFeeds[SourceType.Prevent], reader);
+			DeserializeInternalFeeds(internalFeeds[SourceType.Suppress], reader);
+		}
+		private void SerializeCurrentRaw(SourceType type, System.IO.BinaryWriter writer){
+			DefaultValueDictionary<TBaseStatus, int> dict = currentRaw[type];
+			writer.Write(dict.Count);
+			foreach(KeyValuePair<TBaseStatus, int> pair in dict){
+				writer.Write(pair.Key);
+				writer.Write(pair.Value);
+			}
+		}
+		private static void DeserializeCurrentRaw(DefaultValueDictionary<TBaseStatus, int> dict, System.IO.BinaryReader reader){
+			int count = reader.ReadInt32();
+			for(int i=0;i<count;++i){
+				int key = reader.ReadInt32();
+				int value = reader.ReadInt32();
+				dict.Add(key, value);
+			}
+		}
+		private void SerializeStatusInstances(SourceType type, System.IO.BinaryWriter writer, Action<System.IO.BinaryWriter, Source<TObject>, StatusTracker<TObject>> statusInstanceCallback){
+			MultiValueDictionary<TBaseStatus, Source<TObject>> dict = sources[type];
+			writer.Write(dict.GetAllKeys().Count());
+			foreach(KeyValuePair<TBaseStatus, IEnumerable<Source<TObject>>> pair in dict){
+				writer.Write(pair.Key);
+				List<Source<TObject>> values = pair.Value.ToList();
+				writer.Write(values.Count);
+				foreach(Source<TObject> instance in values){
+					writer.Write(instance.Status);
+					writer.Write((int)instance.SourceType);
+					writer.Write(instance.Value);
+					writer.Write(instance.Priority);
+					if(instance.OverrideSetIndex == null){
+						writer.Write(false);
+					}
+					else{
+						writer.Write(true);
+						writer.Write(instance.OverrideSetIndex.Value);
+					}
+					statusInstanceCallback?.Invoke(writer, instance, this);
+				}
+			}
+		}
+		private void DeserializeStatusInstances(MultiValueDictionary<TBaseStatus, Source<TObject>> dict, System.IO.BinaryReader reader, Action<System.IO.BinaryReader, Source<TObject>, TObject> statusInstanceCallback){
+			int allKeysCount = reader.ReadInt32();
+			for(int i=0;i<allKeysCount;++i){
+				int key = reader.ReadInt32();
+				int count = reader.ReadInt32();
+				for(int j=0;j<count;++j){
+					int status = reader.ReadInt32();
+					int type = reader.ReadInt32();
+					int value = reader.ReadInt32();
+					int priority = reader.ReadInt32();
+					int? overrideIdx = null;
+					if(reader.ReadBoolean()){
+						overrideIdx = reader.ReadInt32();
+					}
+					Source<TObject> instance = new Source<TObject>(status, value, priority, (SourceType)type, overrideIdx);
+					instance.tracker = this;
+					dict.Add(key, instance);
+					statusInstanceCallback?.Invoke(reader, instance, obj);
+				}
+			}
+		}
+		private void SerializeInternalFeeds(SourceType type, System.IO.BinaryWriter writer){
+			Dictionary<TBaseStatus, Dictionary<TBaseStatus, int>> dict = internalFeeds[type];
+			writer.Write(dict.Count);
+			foreach(KeyValuePair<TBaseStatus, Dictionary<TBaseStatus, int>> topLevelPair in dict){
+				writer.Write(topLevelPair.Key);
+				writer.Write(topLevelPair.Value.Count);
+				foreach(KeyValuePair<TBaseStatus, int> pair in topLevelPair.Value){
+					writer.Write(pair.Key);
+					writer.Write(pair.Value);
+				}
+			}
+		}
+		private static void DeserializeInternalFeeds(Dictionary<TBaseStatus, Dictionary<TBaseStatus, int>> dict, System.IO.BinaryReader reader){
+			int topLevelCount = reader.ReadInt32();
+			for(int i=0;i<topLevelCount;++i){
+				int topLevelKey = reader.ReadInt32();
+				dict.Add(topLevelKey, new Dictionary<TBaseStatus, int>());
+				int count = reader.ReadInt32();
+				for(int j=0;j<count;++j){
+					int key = reader.ReadInt32();
+					int value = reader.ReadInt32();
+					dict[topLevelKey].Add(key, value);
+				}
+			}
+		}
 		/// <summary>
 		/// Conveniently create a Source compatible with this tracker. Does not add the Source to the tracker automatically.
 		/// </summary>

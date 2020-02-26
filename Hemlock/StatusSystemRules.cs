@@ -10,7 +10,7 @@ namespace Hemlock {
 	using Converter = Func<int, int>;
 	using TBaseStatus = System.Int32; // Using 'TBaseStatus' to clarify the status keys vs the int values
 
-	public static class StatusConverter<T, TResult> { //todo T --> int?
+	public static class StatusConverter<T, TResult> {
 		/// <summary>
 		/// Define a conversion between two types. Hemlock will use this conversion internally.
 		/// </summary>
