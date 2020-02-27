@@ -80,7 +80,7 @@ namespace Hemlock {
 							if(includeWarnings) {
 								string error = $"WARNING:  Status \"{GetBestName(r.SourceStatus)}\" cancels itself:";
 								error += GetPathString(r.Path, false);
-								error += GetErrorLine("(Take a look at the 'Single Source' setting to see if that's what you actually want.)");
+								error += GetErrorLine("(Take a look at the 'Single Instance' setting to see if that's what you actually want.)");
 								result.Add(error);
 							}
 							break;
@@ -324,9 +324,9 @@ namespace Hemlock {
 		}
 		private void CheckRules() {
 			IEnumerable<KeyValuePair<TStatus, IEnumerable<TStatus>>> allPairs;
-			allPairs = rules.statusesFedBy[SourceType.Feed];
-			allPairs = allPairs.Concat(rules.statusesFedBy[SourceType.Suppress]);
-			allPairs = allPairs.Concat(rules.statusesFedBy[SourceType.Prevent]);
+			allPairs = rules.statusesFedBy[InstanceType.Feed];
+			allPairs = allPairs.Concat(rules.statusesFedBy[InstanceType.Suppress]);
+			allPairs = allPairs.Concat(rules.statusesFedBy[InstanceType.Prevent]);
 			allPairs = allPairs.Concat(rules.statusesCancelledBy);
 			allPairs = allPairs.Concat(rules.statusesExtendedBy);
 			foreach(var pair in allPairs) { // For every rule...
@@ -398,23 +398,23 @@ namespace Hemlock {
 					}
 				};
 			}
-			foreach(SourceType sourceType in new SourceType[] { SourceType.Feed, SourceType.Suppress, SourceType.Prevent }) {
+			foreach(InstanceType instanceType in new InstanceType[] { InstanceType.Feed, InstanceType.Suppress, InstanceType.Prevent }) {
 				RelationType relation;
-				switch(sourceType) {
-					case SourceType.Feed:
+				switch(instanceType) {
+					case InstanceType.Feed:
 						relation = RelationType.Feeds;
 						break;
-					case SourceType.Suppress:
+					case InstanceType.Suppress:
 						relation = RelationType.Suppresses;
 						break;
-					case SourceType.Prevent:
+					case InstanceType.Prevent:
 						relation = RelationType.Prevents;
 						break;
 					default: throw new NotImplementedException();
 				}
-				foreach(TStatus targetStatus in rules.statusesFedBy[sourceType][status]) {
+				foreach(TStatus targetStatus in rules.statusesFedBy[instanceType][status]) {
 					var pair = new StatusPair(status, targetStatus);
-					bool conditional = rules.converters[sourceType].ContainsKey(pair);
+					bool conditional = rules.converters[instanceType].ContainsKey(pair);
 					yield return new Relationship {
 						Path = new List<DirectRelation> {
 							new DirectRelation { Status = status, Relation = RelationType.Self },

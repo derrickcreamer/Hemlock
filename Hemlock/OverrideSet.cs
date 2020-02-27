@@ -9,15 +9,15 @@ namespace Hemlock {
 		internal DefaultValueDictionary<StatusChange, OnChangedHandler<TObject>> onChangedOverrides;
 
 		/// <summary>
-		/// Override message or effect behavior whenever a change in *this* status or source (i.e., the status
-		/// or source which is using this override set) causes a change in *another* status.
+		/// Override message or effect behavior whenever a change in *this* status or StatusInstance (i.e., the status
+		/// or StatusInstance which is using this override set) causes a change in *another* status.
 		/// </summary>
 		/// <param name="overridden">The status whose message/effect behavior should be overridden</param>
 		public StatusSystem<TObject>.StatusHandlers Overrides(TBaseStatus overridden)
 			=> new StatusSystem<TObject>.StatusHandlers(this, default(TBaseStatus), overridden);
 		/// <summary>
-		/// Override message or effect behavior whenever a change in *this* status or source (i.e., the status
-		/// or source which is using this override set) causes a change in *another* status.
+		/// Override message or effect behavior whenever a change in *this* status or StatusInstance (i.e., the status
+		/// or StatusInstance which is using this override set) causes a change in *another* status.
 		/// </summary>
 		/// <param name="overridden">The status whose message/effect behavior should be overridden</param>
 		public StatusSystem<TObject>.StatusHandlers Overrides<TStatus>(TStatus overridden) where TStatus : struct

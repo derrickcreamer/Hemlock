@@ -18,10 +18,10 @@ namespace Hemlock {
 	}
 
 	/// <summary>
-	/// SourceType determines whether a Source will feed, suppress, or prevent its status.
+	/// InstanceType determines whether a StatusInstance will feed, suppress, or prevent its status.
 	/// (Feed is the default and most common.)
 	/// </summary>
-	public enum SourceType { Feed, Suppress, Prevent };
+	public enum InstanceType { Feed, Suppress, Prevent };
 
 	/// <summary>
 	/// A method that'll be run when a status changes on "obj".
@@ -169,14 +169,14 @@ namespace Hemlock {
 				}
 			}
 			/// <summary>
-			/// If a status is set to "single source", it can only have 1 source at a time.
-			/// Whenever a source is added, all other sources are removed. Additionally, a single-source status
+			/// If a status is set to "single instance", it can only have 1 StatusInstance at a time.
+			/// Whenever an instance is added, all other instances are removed. Additionally, a single-instance status
 			/// can have its value set directly through its indexer.
 			/// This is very useful when a status should behave more like a single number than a collection of numbers.
 			/// </summary>
-			public bool SingleSource {
-				get { return rules.SingleSource[status]; }
-				set { rules.SingleSource[status] = value; }
+			public bool SingleInstance {
+				get { return rules.SingleInstance[status]; }
+				set { rules.SingleInstance[status] = value; }
 			}
 			private const string StatusExpected = "Expected one or more statuses";
 			/// <summary>
@@ -197,7 +197,7 @@ namespace Hemlock {
 			public void Extends<TStatus>(params TStatus[] extendedStatuses) where TStatus : struct => Extends(Convert(extendedStatuses));
 			/// <summary>
 			/// Declare that this status cancels one or more other statuses
-			/// (i.e., when the value of this status increases, try to set those other statuses to zero by removing their Sources).
+			/// (i.e., when the value of this status increases, try to set those other statuses to zero by removing their StatusInstances).
 			/// </summary>
 			public void Cancels(params TBaseStatus[] cancelledStatuses) {
 				if(cancelledStatuses.Length == 0) throw new ArgumentException(StatusExpected);
@@ -207,13 +207,13 @@ namespace Hemlock {
 			}
 			/// <summary>
 			/// Declare that this status cancels one or more other statuses
-			/// (i.e., when the value of this status increases, try to set those other statuses to zero by removing their Sources).
+			/// (i.e., when the value of this status increases, try to set those other statuses to zero by removing their StatusInstances).
 			/// </summary>
 			public void Cancels<TStatus>(params TStatus[] cancelledStatuses) where TStatus : struct => Cancels(Convert(cancelledStatuses));
 			/// <summary>
 			/// Declare that this status conditionally cancels one or more other statuses
 			/// (i.e., when the value of this status increases, if the condition is true,
-			/// try to set those other statuses to zero by removing their Sources).
+			/// try to set those other statuses to zero by removing their StatusInstances).
 			/// </summary>
 			/// <param name="condition">Return true or false based on the current value of this status</param>
 			public void Cancels(Func<int, bool> condition, params TBaseStatus[] cancelledStatuses) {
@@ -226,7 +226,7 @@ namespace Hemlock {
 			/// <summary>
 			/// Declare that this status conditionally cancels one or more other statuses
 			/// (i.e., when the value of this status increases, if the condition is true,
-			/// try to set those other statuses to zero by removing their Sources).
+			/// try to set those other statuses to zero by removing their StatusInstances).
 			/// </summary>
 			/// <param name="condition">Return true or false based on the current value of this status</param>
 			public void Cancels<TStatus>(Func<int, bool> condition, params TStatus[] cancelledStatuses) where TStatus : struct => Cancels(condition, Convert(cancelledStatuses));
@@ -263,122 +263,108 @@ namespace Hemlock {
 			/// Declare that this status feeds one or more other statuses
 			/// (i.e., this status's value will be added to those other statuses).
 			/// </summary>
-			public void Feeds(params TBaseStatus[] fedStatuses) => FeedsInternal(SourceType.Feed, null, null, null, fedStatuses);
+			public void Feeds(params TBaseStatus[] fedStatuses) => FeedsInternal(InstanceType.Feed, null, null, null, fedStatuses);
 			/// <summary>
 			/// Declare that this status feeds one or more other statuses
 			/// (i.e., this status's value will be added to those other statuses).
 			/// </summary>
-			public void Feeds<TStatus>(params TStatus[] fedStatuses) where TStatus : struct => FeedsInternal(SourceType.Feed, null, null, null, Convert(fedStatuses));
+			public void Feeds<TStatus>(params TStatus[] fedStatuses) where TStatus : struct => FeedsInternal(InstanceType.Feed, null, null, null, Convert(fedStatuses));
 			/// <summary>
 			/// Declare that this status conditionally feeds one or more other statuses
 			/// (i.e., if this status's value meets the given condition, that value will be added to those other statuses).
 			/// </summary>
 			/// <param name="condition">Return true or false based on the current value of this status</param>
-			public void Feeds(Func<int, bool> condition, params TBaseStatus[] fedStatuses) => FeedsInternal(SourceType.Feed, null, null, condition, fedStatuses);
+			public void Feeds(Func<int, bool> condition, params TBaseStatus[] fedStatuses) => FeedsInternal(InstanceType.Feed, null, null, condition, fedStatuses);
 			/// <summary>
 			/// Declare that this status conditionally feeds one or more other statuses
 			/// (i.e., if this status's value meets the given condition, that value will be added to those other statuses).
 			/// </summary>
 			/// <param name="condition">Return true or false based on the current value of this status</param>
-			public void Feeds<TStatus>(Func<int, bool> condition, params TStatus[] fedStatuses) where TStatus : struct => FeedsInternal(SourceType.Feed, null, null, condition, Convert(fedStatuses));
+			public void Feeds<TStatus>(Func<int, bool> condition, params TStatus[] fedStatuses) where TStatus : struct => FeedsInternal(InstanceType.Feed, null, null, condition, Convert(fedStatuses));
 			/// <summary>
 			/// Declare that this status feeds one or more other statuses a specific value
 			/// (i.e., if this status's value is greater than zero, a specific value will be added to those other statuses).
 			/// </summary>
 			/// <param name="fedValue">The specific value to add to each listed status if this status is greater than zero</param>
-			public void Feeds(int fedValue, params TBaseStatus[] fedStatuses) => FeedsInternal(SourceType.Feed, null, fedValue, null, fedStatuses);
+			public void Feeds(int fedValue, params TBaseStatus[] fedStatuses) => FeedsInternal(InstanceType.Feed, null, fedValue, null, fedStatuses);
 			/// <summary>
 			/// Declare that this status feeds one or more other statuses a specific value
 			/// (i.e., if this status's value is greater than zero, a specific value will be added to those other statuses).
 			/// </summary>
 			/// <param name="fedValue">The specific value to add to each listed status if this status is greater than zero</param>
-			public void Feeds<TStatus>(int fedValue, params TStatus[] fedStatuses) where TStatus : struct => FeedsInternal(SourceType.Feed, null, fedValue, null, Convert(fedStatuses));
+			public void Feeds<TStatus>(int fedValue, params TStatus[] fedStatuses) where TStatus : struct => FeedsInternal(InstanceType.Feed, null, fedValue, null, Convert(fedStatuses));
 			/// <summary>
 			/// Declare that this status conditionally feeds one or more other statuses a specific value
 			/// (i.e., if this status's value meets the given condition, a specific value will be added to those other statuses).
 			/// </summary>
 			/// <param name="fedValue">The specific value to add to each listed status if this status is greater than zero</param>
 			/// <param name="condition">Return true or false based on the current value of this status</param>
-			public void Feeds(int fedValue, Func<int, bool> condition, params TBaseStatus[] fedStatuses) => FeedsInternal(SourceType.Feed, null, fedValue, condition, fedStatuses);
+			public void Feeds(int fedValue, Func<int, bool> condition, params TBaseStatus[] fedStatuses) => FeedsInternal(InstanceType.Feed, null, fedValue, condition, fedStatuses);
 			/// <summary>
 			/// Declare that this status conditionally feeds one or more other statuses a specific value
 			/// (i.e., if this status's value meets the given condition, a specific value will be added to those other statuses).
 			/// </summary>
 			/// <param name="fedValue">The specific value to add to each listed status if this status is greater than zero</param>
 			/// <param name="condition">Return true or false based on the current value of this status</param>
-			public void Feeds<TStatus>(int fedValue, Func<int, bool> condition, params TStatus[] fedStatuses) where TStatus : struct => FeedsInternal(SourceType.Feed, null, fedValue, condition, Convert(fedStatuses));
+			public void Feeds<TStatus>(int fedValue, Func<int, bool> condition, params TStatus[] fedStatuses) where TStatus : struct => FeedsInternal(InstanceType.Feed, null, fedValue, condition, Convert(fedStatuses));
 			/// <summary>
 			/// Declare that this status feeds one or more other statuses using a value converter
 			/// (i.e., this status's value is put into the converter, and (if nonzero) the result is added to those other statuses).
 			/// </summary>
 			/// <param name="converter">Return an int based on the current value of this status</param>
-			public void Feeds(Converter converter, params TBaseStatus[] fedStatuses) => FeedsInternal(SourceType.Feed, converter, null, null, fedStatuses);
+			public void Feeds(Converter converter, params TBaseStatus[] fedStatuses) => FeedsInternal(InstanceType.Feed, converter, null, null, fedStatuses);
 			/// <summary>
 			/// Declare that this status feeds one or more other statuses using a value converter
 			/// (i.e., this status's value is put into the converter, and (if nonzero) the result is added to those other statuses).
 			/// </summary>
 			/// <param name="converter">Return an int based on the current value of this status</param>
-			public void Feeds<TStatus>(Converter converter, params TStatus[] fedStatuses) where TStatus : struct => FeedsInternal(SourceType.Feed, converter, null, null, Convert(fedStatuses));
+			public void Feeds<TStatus>(Converter converter, params TStatus[] fedStatuses) where TStatus : struct => FeedsInternal(InstanceType.Feed, converter, null, null, Convert(fedStatuses));
 
 			/// <summary>
 			/// Declare that this status suppresses one or more other statuses
 			/// (i.e., while this status's value is greater than zero, the value of those other statuses will always be zero).
 			/// </summary>
-			public void Suppresses(params TBaseStatus[] suppressedStatuses) => FeedsInternal(SourceType.Suppress, null, null, null, suppressedStatuses);
+			public void Suppresses(params TBaseStatus[] suppressedStatuses) => FeedsInternal(InstanceType.Suppress, null, null, null, suppressedStatuses);
 			/// <summary>
 			/// Declare that this status suppresses one or more other statuses
 			/// (i.e., while this status's value is greater than zero, the value of those other statuses will always be zero).
 			/// </summary>
-			public void Suppresses<TStatus>(params TStatus[] suppressedStatuses) where TStatus : struct => FeedsInternal(SourceType.Suppress, null, null, null, Convert(suppressedStatuses));
+			public void Suppresses<TStatus>(params TStatus[] suppressedStatuses) where TStatus : struct => FeedsInternal(InstanceType.Suppress, null, null, null, Convert(suppressedStatuses));
 			/// <summary>
 			/// Declare that this status conditionally suppresses one or more other statuses
 			/// (i.e., while this status's value meets the given condition, the value of those other statuses will always be zero).
 			/// </summary>
 			/// <param name="condition">Return true or false based on the current value of this status</param>
-			public void Suppresses(Func<int, bool> condition, params TBaseStatus[] suppressedStatuses) => FeedsInternal(SourceType.Suppress, null, null, condition, suppressedStatuses);
+			public void Suppresses(Func<int, bool> condition, params TBaseStatus[] suppressedStatuses) => FeedsInternal(InstanceType.Suppress, null, null, condition, suppressedStatuses);
 			/// <summary>
 			/// Declare that this status conditionally suppresses one or more other statuses
 			/// (i.e., while this status's value meets the given condition, the value of those other statuses will always be zero).
 			/// </summary>
 			/// <param name="condition">Return true or false based on the current value of this status</param>
-			public void Suppresses<TStatus>(Func<int, bool> condition, params TStatus[] suppressedStatuses) where TStatus : struct => FeedsInternal(SourceType.Suppress, null, null, condition, Convert(suppressedStatuses));
+			public void Suppresses<TStatus>(Func<int, bool> condition, params TStatus[] suppressedStatuses) where TStatus : struct => FeedsInternal(InstanceType.Suppress, null, null, condition, Convert(suppressedStatuses));
 
 			/// <summary>
 			/// Declare that this status prevents one or more other statuses
-			/// (i.e., while this status's value is greater than zero, new "Feed" Sources can't be added for those other statuses).
+			/// (i.e., while this status's value is greater than zero, new "Feed" StatusInstances can't be added for those other statuses).
 			/// </summary>
-			public void Prevents(params TBaseStatus[] preventedStatuses) => FeedsInternal(SourceType.Prevent, null, null, null, preventedStatuses);
+			public void Prevents(params TBaseStatus[] preventedStatuses) => FeedsInternal(InstanceType.Prevent, null, null, null, preventedStatuses);
 			/// <summary>
 			/// Declare that this status prevents one or more other statuses
-			/// (i.e., while this status's value is greater than zero, new "Feed" Sources can't be added for those other statuses).
+			/// (i.e., while this status's value is greater than zero, new "Feed" StatusInstances can't be added for those other statuses).
 			/// </summary>
-			public void Prevents<TStatus>(params TStatus[] preventedStatuses) where TStatus : struct => FeedsInternal(SourceType.Prevent, null, null, null, Convert(preventedStatuses));
+			public void Prevents<TStatus>(params TStatus[] preventedStatuses) where TStatus : struct => FeedsInternal(InstanceType.Prevent, null, null, null, Convert(preventedStatuses));
 			/// <summary>
 			/// Declare that this status conditionally prevents one or more other statuses
-			/// (i.e., while this status's value meets the given condition, new "Feed" Sources can't be added for those other statuses).
+			/// (i.e., while this status's value meets the given condition, new "Feed" StatusInstances can't be added for those other statuses).
 			/// </summary>
-			public void Prevents(Func<int, bool> condition, params TBaseStatus[] preventedStatuses) => FeedsInternal(SourceType.Prevent, null, null, condition, preventedStatuses);
+			public void Prevents(Func<int, bool> condition, params TBaseStatus[] preventedStatuses) => FeedsInternal(InstanceType.Prevent, null, null, condition, preventedStatuses);
 			/// <summary>
 			/// Declare that this status conditionally prevents one or more other statuses
-			/// (i.e., while this status's value meets the given condition, new "Feed" Sources can't be added for those other statuses).
+			/// (i.e., while this status's value meets the given condition, new "Feed" StatusInstances can't be added for those other statuses).
 			/// </summary>
-			public void Prevents<TStatus>(Func<int, bool> condition, params TStatus[] preventedStatuses) where TStatus : struct => FeedsInternal(SourceType.Prevent, null, null, condition, Convert(preventedStatuses));
+			public void Prevents<TStatus>(Func<int, bool> condition, params TStatus[] preventedStatuses) where TStatus : struct => FeedsInternal(InstanceType.Prevent, null, null, condition, Convert(preventedStatuses));
 
-			// These are disabled because there's currently no valid reason to use them.
-			//public void Suppresses(int fedValue, params TBaseStatus[] suppressedStatuses) => FeedsInternal(SourceType.Suppression, null, fedValue, null, suppressedStatuses);
-			//public void Suppresses<TStatus>(int fedValue, params TStatus[] suppressedStatuses) where TStatus : struct => FeedsInternal(SourceType.Suppression, null, fedValue, null, Convert(suppressedStatuses));
-			//public void Suppresses(int fedValue, Func<int, bool> condition, params TBaseStatus[] suppressedStatuses) => FeedsInternal(SourceType.Suppression, null, fedValue, condition, suppressedStatuses);
-			//public void Suppresses<TStatus>(int fedValue, Func<int, bool> condition, params TStatus[] suppressedStatuses) where TStatus : struct => FeedsInternal(SourceType.Suppression, null, fedValue, condition, Convert(suppressedStatuses));
-			//public void Suppresses(Converter converter, params TBaseStatus[] suppressedStatuses) => FeedsInternal(SourceType.Suppression, converter, null, null, suppressedStatuses);
-			//public void Suppresses<TStatus>(Converter converter, params TStatus[] suppressedStatuses) where TStatus : struct => FeedsInternal(SourceType.Suppression, converter, null, null, Convert(suppressedStatuses));
-			//public void Prevents(int fedValue, params TBaseStatus[] preventedStatuses) => FeedsInternal(SourceType.Prevention, null, fedValue, null, preventedStatuses);
-			//public void Prevents<TStatus>(int fedValue, params TStatus[] preventedStatuses) where TStatus : struct => FeedsInternal(SourceType.Prevention, null, fedValue, null, Convert(preventedStatuses));
-			//public void Prevents(int fedValue, Func<int, bool> condition, params TBaseStatus[] preventedStatuses) => FeedsInternal(SourceType.Prevention, null, fedValue, condition, preventedStatuses);
-			//public void Prevents<TStatus>(int fedValue, Func<int, bool> condition, params TStatus[] preventedStatuses) where TStatus : struct => FeedsInternal(SourceType.Prevention, null, fedValue, condition, Convert(preventedStatuses));
-			//public void Prevents(Converter converter, params TBaseStatus[] preventedStatuses) => FeedsInternal(SourceType.Prevention, converter, null, null, preventedStatuses);
-			//public void Prevents<TStatus>(Converter converter, params TStatus[] preventedStatuses) where TStatus : struct => FeedsInternal(SourceType.Prevention, converter, null, null, Convert(preventedStatuses));
-
-			protected void FeedsInternal(SourceType type, Converter converter,
+			protected void FeedsInternal(InstanceType type, Converter converter,
 				int? fedValue, Func<int, bool> condition, params TBaseStatus[] fedStatuses)
 			{
 				if(fedStatuses.Length == 0) throw new ArgumentException(StatusExpected);
@@ -417,7 +403,7 @@ namespace Hemlock {
 			}
 			/// <summary>
 			/// Declare that this status is prevented when a given condition is met
-			/// (i.e., while that condition is met, new "Feed" Sources can't be added for this status).
+			/// (i.e., while that condition is met, new "Feed" StatusInstances can't be added for this status).
 			/// </summary>
 			/// <param name="preventionCondition">Return true or false based on the current object</param>
 			public void PreventedWhen(Func<TObject, TBaseStatus, bool> preventionCondition) {
@@ -430,17 +416,17 @@ namespace Hemlock {
 		}
 		/// <summary>Define a new rule for the given status</summary>
 		public StatusRules this[TBaseStatus status] => new StatusRules(this, status);
-		protected Dictionary<SourceType, Aggregator> defaultAggs;
+		protected Dictionary<InstanceType, Aggregator> defaultAggs;
 		/// <summary>
 		/// The default value aggregator will be used to calculate the value of each status,
 		/// unless that status has its own value aggregator defined.
 		/// </summary>
 		public Aggregator DefaultValueAggregator {
-			get { return defaultAggs[SourceType.Feed]; }
+			get { return defaultAggs[InstanceType.Feed]; }
 			set {
 				if(value == null) throw new ArgumentNullException("value", "Default aggregators cannot be null.");
 				ValidateAggregator(value);
-				defaultAggs[SourceType.Feed] = value;
+				defaultAggs[InstanceType.Feed] = value;
 			}
 		}
 		internal void ValidateAggregator(Aggregator agg) {
@@ -448,15 +434,15 @@ namespace Hemlock {
 		}
 
 		internal DefaultValueDictionary<TBaseStatus, Aggregator> valueAggs;
-		internal DefaultHashSet<TBaseStatus> SingleSource { get; private set; }
+		internal DefaultHashSet<TBaseStatus> SingleInstance { get; private set; }
 
 		internal MultiValueDictionary<TBaseStatus, TBaseStatus> statusesCancelledBy;
 		internal MultiValueDictionary<TBaseStatus, TBaseStatus> statusesExtendedBy;
 		internal MultiValueDictionary<TBaseStatus, TBaseStatus> statusesThatExtend;
 
-		internal Dictionary<SourceType, MultiValueDictionary<TBaseStatus, TBaseStatus>> statusesFedBy;
+		internal Dictionary<InstanceType, MultiValueDictionary<TBaseStatus, TBaseStatus>> statusesFedBy;
 
-		internal Dictionary<SourceType, Dictionary<StatusPair, Converter>> converters;
+		internal Dictionary<InstanceType, Dictionary<StatusPair, Converter>> converters;
 		internal void ValidateConverter(Converter conv) {
 			if(conv(0) != 0) throw new ArgumentException("Converters must output 0 when input is 0.");
 		}
@@ -482,8 +468,8 @@ namespace Hemlock {
 		internal DefaultValueDictionary<TBaseStatus, DefaultValueDictionary<StatusChange, OnChangedHandler<TObject>>> onChangedHandlers;
 		internal MultiValueDictionary<TBaseStatus, Func<TObject, TBaseStatus, bool>> extraPreventionConditions;
 
-		internal Aggregator GetAggregator(TBaseStatus status, SourceType type) {
-			if(type == SourceType.Feed) {
+		internal Aggregator GetAggregator(TBaseStatus status, InstanceType type) {
+			if(type == InstanceType.Feed) {
 				Aggregator agg = valueAggs[status];
 				if(agg != null) return agg;
 			}
@@ -557,37 +543,37 @@ namespace Hemlock {
 			return new StatusTracker<TObject>(obj, this);
 		}
 		/// <summary>
-		/// Conveniently create a Source compatible with all trackers spawned from this object.
+		/// Conveniently create a StatusInstance compatible with all trackers spawned from this object.
 		/// </summary>
-		/// <param name="status">The status to which the Source will add its value</param>
-		/// <param name="value">The amount by which the Source will increase its status</param>
-		/// <param name="priority">A Source with lower priority will be cancelled before a Source with
+		/// <param name="status">The status to which the instance will add its value</param>
+		/// <param name="value">The amount by which the instance will increase its status</param>
+		/// <param name="priority">An instance with lower priority will be cancelled before an instance with
 		/// higher priority when Cancel() is called on this status.</param>
 		/// <param name="type">
-		/// The SourceType determines whether the Source will feed, suppress, or prevent its status.
-		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
+		/// The InstanceType determines whether the instance will feed, suppress, or prevent its status.
+		/// (Feed is the default and most common. When a status is cancelled, its "Feed" StatusInstances are removed.)
 		/// </param>
-		public Source<TObject> CreateSource(TBaseStatus status, int value = 1, int priority = 0,
-			SourceType type = SourceType.Feed, int? overrideSetIndex = null)
+		public StatusInstance<TObject> CreateStatusInstance(TBaseStatus status, int value = 1, int priority = 0,
+			InstanceType type = InstanceType.Feed, int? overrideSetIndex = null)
 		{
-			return new Source<TObject>(status, value, priority, type, overrideSetIndex);
+			return new StatusInstance<TObject>(status, value, priority, type, overrideSetIndex);
 		}
 		/// <summary>
-		/// Conveniently create a Source compatible with all trackers spawned from this object.
+		/// Conveniently create a StatusInstance compatible with all trackers spawned from this object.
 		/// </summary>
-		/// <param name="status">The status to which the Source will add its value</param>
-		/// <param name="value">The amount by which the Source will increase its status</param>
-		/// <param name="priority">A Source with lower priority will be cancelled before a Source with
+		/// <param name="status">The status to which the instance will add its value</param>
+		/// <param name="value">The amount by which the instance will increase its status</param>
+		/// <param name="priority">An instance with lower priority will be cancelled before an instance with
 		/// higher priority when Cancel() is called on this status.</param>
 		/// <param name="type">
-		/// The SourceType determines whether the Source will feed, suppress, or prevent its status.
-		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
+		/// The InstanceType determines whether the instance will feed, suppress, or prevent its status.
+		/// (Feed is the default and most common. When a status is cancelled, its "Feed" StatusInstances are removed.)
 		/// </param>
-		public Source<TObject> CreateSource<TStatus>(TStatus status, int value = 1, int priority = 0,
-			SourceType type = SourceType.Feed, int? overrideSetIndex = null)
+		public StatusInstance<TObject> CreateStatusInstance<TStatus>(TStatus status, int value = 1, int priority = 0,
+			InstanceType type = InstanceType.Feed, int? overrideSetIndex = null)
 			where TStatus : struct
 		{
-			return new Source<TObject>(Convert(status), value, priority, type, overrideSetIndex);
+			return new StatusInstance<TObject>(Convert(status), value, priority, type, overrideSetIndex);
 		}
 		protected static TBaseStatus Convert<TStatus>(TStatus status) where TStatus : struct {
 			try {
@@ -631,19 +617,19 @@ namespace Hemlock {
 				foreach(int i in ints) if(i > max) max = i;
 				return max;
 			};
-			defaultAggs = new Dictionary<SourceType, Func<IEnumerable<int>, int>>();
-			defaultAggs[SourceType.Feed] = Total;
-			defaultAggs[SourceType.Suppress] = Bool;
-			defaultAggs[SourceType.Prevent] = Bool;
+			defaultAggs = new Dictionary<InstanceType, Func<IEnumerable<int>, int>>();
+			defaultAggs[InstanceType.Feed] = Total;
+			defaultAggs[InstanceType.Suppress] = Bool;
+			defaultAggs[InstanceType.Prevent] = Bool;
 			valueAggs = new DefaultValueDictionary<TBaseStatus, Aggregator>();
-			SingleSource = new DefaultHashSet<TBaseStatus>();
+			SingleInstance = new DefaultHashSet<TBaseStatus>();
 			statusesCancelledBy = new MultiValueDictionary<TBaseStatus, TBaseStatus>();
 			statusesExtendedBy = new MultiValueDictionary<TBaseStatus, TBaseStatus>();
 			statusesThatExtend = new MultiValueDictionary<TBaseStatus, TBaseStatus>();
-			statusesFedBy = new Dictionary<SourceType, MultiValueDictionary<TBaseStatus, TBaseStatus>>();
-			converters = new Dictionary<SourceType, Dictionary<StatusPair, Func<int, int>>>();
+			statusesFedBy = new Dictionary<InstanceType, MultiValueDictionary<TBaseStatus, TBaseStatus>>();
+			converters = new Dictionary<InstanceType, Dictionary<StatusPair, Func<int, int>>>();
 			cancellationConditions = new DefaultValueDictionary<StatusPair, Func<int, bool>>();
-			foreach(SourceType type in Enum.GetValues(typeof(SourceType))) {
+			foreach(InstanceType type in Enum.GetValues(typeof(InstanceType))) {
 				statusesFedBy[type] = new MultiValueDictionary<TBaseStatus, TBaseStatus>();
 				converters[type] = new Dictionary<StatusPair, Func<int, int>>();
 			}

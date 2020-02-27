@@ -4,20 +4,20 @@ namespace Hemlock {
 
 	using TBaseStatus = System.Int32;
 
-	public class Source<TObject> {
+	public class StatusInstance<TObject> {
 		/// <summary>
-		/// The status to which this Source will add its value
+		/// The status to which this instance will add its value
 		/// </summary>
 		public readonly TBaseStatus Status;
 		/// <summary>
-		/// The SourceType determines whether this Source will feed, suppress, or prevent its status.
-		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
+		/// The InstanceType determines whether this instance will feed, suppress, or prevent its status.
+		/// (Feed is the default and most common. When a status is cancelled, its "Feed" StatusInstances are removed.)
 		/// </summary>
-		public readonly SourceType SourceType;
+		public readonly InstanceType InstanceType;
 		internal StatusTracker<TObject> tracker;
 		private int internalValue;
 		/// <summary>
-		/// The value added to this Source's status. If this property is changed after this Source has been added
+		/// The value added to this instance's status. If this property is changed after this StatusInstance has been added
 		/// to a tracker, the status's value will update automatically.
 		/// </summary>
 		public int Value {
@@ -25,17 +25,17 @@ namespace Hemlock {
 			set {
 				if(value != internalValue) {
 					internalValue = value;
-					tracker?.CheckSourceChanged(this);
+					tracker?.CheckInstanceChanged(this);
 				}
 			}
 		}
 		/// <summary>
-		/// Priority is important only during cancellation.  When a status is cancelled, its Sources are removed
+		/// Priority is important only during cancellation.  When a status is cancelled, its StatusInstances are removed
 		/// one at a time, in order of priority - lowest first.
 		/// </summary>
 		public int Priority { get; set; }
 		/// <summary>
-		/// Test whether this Source's status is a valid value for the type of the "status" argument.
+		/// Test whether this StatusInstance's status is a valid value for the type of the "status" argument.
 		/// If so, load its value into "status" and return true.
 		/// (For enums, test whether this value is in the defined range for that enum.)
 		/// </summary>
@@ -63,7 +63,7 @@ namespace Hemlock {
 			return true; // I guess this should return true. If it isn't an enum, all we know is that the cast was successful.
 		}
 		/// <summary>
-		/// Casts this Source's raw value to a chosen type, regardless of whether it falls into the defined range of enum types.
+		/// Casts this instance's Status property to a chosen type, regardless of whether it falls into the defined range of enum types.
 		/// </summary>
 		public TStatus GetStatus<TStatus>() {
 			if(StatusConverter<TBaseStatus, TStatus>.Convert != null) {
@@ -80,40 +80,40 @@ namespace Hemlock {
 		public int? OverrideSetIndex => overrideSetIndex;
 
 		/// <summary>
-		/// Create a (shallow) copy of this Source. If any non-null arguments are provided to this method,
+		/// Create a (shallow) copy of this StatusInstance. If any non-null arguments are provided to this method,
 		/// those values will be used in the copy.
 		/// </summary>
 		/// <param name="value">If provided, the copy will be created with this value.</param>
 		/// <param name="priority">If provided, the copy will be created with this priority.</param>
-		/// <param name="type">If provided, the copy will be created with this SourceType.</param>
+		/// <param name="type">If provided, the copy will be created with this InstanceType.</param>
 		/// <param name="overrideSetIndex">If provided, the copy will be created with this override set index.</param>
-		public Source<TObject> Clone(int? value = null, int? priority = null, SourceType? type = null, int? overrideSetIndex = null) {
-			return new Source<TObject>(this, value, priority, type, overrideSetIndex);
+		public StatusInstance<TObject> Clone(int? value = null, int? priority = null, InstanceType? type = null, int? overrideSetIndex = null) {
+			return new StatusInstance<TObject>(this, value, priority, type, overrideSetIndex);
 		}
-		/// <param name="status">The status to which this Source will add its value</param>
-		/// <param name="value">The amount by which this Source will increase its status</param>
-		/// <param name="priority">A Source with lower priority will be cancelled before a Source with
+		/// <param name="status">The status to which this instance will add its value</param>
+		/// <param name="value">The amount by which this instance will increase its status</param>
+		/// <param name="priority">An instance with lower priority will be cancelled before an instance with
 		/// higher priority when Cancel() is called on this status.</param>
 		/// <param name="type">
-		/// The SourceType determines whether this Source will feed, suppress, or prevent its status.
-		/// (Feed is the default and most common. When a status is cancelled, its "Feed" Sources are removed.)
+		/// The InstanceType determines whether this instance will feed, suppress, or prevent its status.
+		/// (Feed is the default and most common. When a status is cancelled, its "Feed" StatusInstances are removed.)
 		/// </param>
-		public Source(TBaseStatus status, int value = 1, int priority = 0, SourceType type = SourceType.Feed, int? overrideSetIndex = null) {
+		public StatusInstance(TBaseStatus status, int value = 1, int priority = 0, InstanceType type = InstanceType.Feed, int? overrideSetIndex = null) {
 			Status = status;
 			internalValue = value;
 			Priority = priority;
-			SourceType = type;
+			InstanceType = type;
 			this.overrideSetIndex = overrideSetIndex;
 		}
-		protected Source(Source<TObject> copyFrom, int? value = null, int? priority = null, SourceType? type = null, int? overrideSetIndex = null) {
+		protected StatusInstance(StatusInstance<TObject> copyFrom, int? value = null, int? priority = null, InstanceType? type = null, int? overrideSetIndex = null) {
 			if(copyFrom == null) throw new ArgumentNullException("copyFrom");
 			Status = copyFrom.Status;
 			if(value == null) internalValue = copyFrom.internalValue;
 			else internalValue = value.Value;
 			if(priority == null) Priority = copyFrom.Priority;
 			else Priority = priority.Value;
-			if(type == null) SourceType = copyFrom.SourceType;
-			else SourceType = type.Value;
+			if(type == null) InstanceType = copyFrom.InstanceType;
+			else InstanceType = type.Value;
 			if(overrideSetIndex == null) this.overrideSetIndex = copyFrom.overrideSetIndex;
 			else this.overrideSetIndex = overrideSetIndex;
 		}

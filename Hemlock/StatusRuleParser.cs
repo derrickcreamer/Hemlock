@@ -64,7 +64,7 @@ namespace Hemlock {
 		internal static bool IsAggregator(this string token) {
 			return new List<string> { "total", "bool", "max" }.Contains(token);
 		}
-		internal static bool IsSourceLimiter(this string token) {
+		internal static bool IsInstanceLimiter(this string token) {
 			return new List<string> { "single", "multiple" }.Contains(token);
 		}
 	}
@@ -75,7 +75,7 @@ namespace Hemlock {
 		int idx;
 		string rulesDefaultAggregator;
 		string parserDefaultAggregator;
-		string parserDefaultSourceLimit;
+		string parserDefaultInstanceLimit;
 		List<Type> extraEnums;
 		internal StatusParserInternal(StatusSystem<TObject> rules, List<string> tokens) {
 			this.rules = rules;
@@ -86,7 +86,7 @@ namespace Hemlock {
 			else if(rules.DefaultValueAggregator == rules.MaximumOrZero) rulesDefaultAggregator = "max";
 			else rulesDefaultAggregator = null;
 			parserDefaultAggregator = rulesDefaultAggregator;
-			parserDefaultSourceLimit = "multiple";
+			parserDefaultInstanceLimit = "multiple";
 		}
 		internal void Parse() {
 			for(idx = 0;idx<tokens.Count;) {
@@ -105,7 +105,7 @@ namespace Hemlock {
 						break;
 					case "single":
 					case "multiple":
-						parserDefaultSourceLimit = token;
+						parserDefaultInstanceLimit = token;
 						++idx;
 						ConsumeOrError(":");
 						break;
@@ -115,7 +115,7 @@ namespace Hemlock {
 							if(!TryParse(token, out status)) throw new InvalidDataException($"Error: {token} not recognized as any given type.");
 							++idx;
 							SetAggregator(status, parserDefaultAggregator);
-							SetSourceLimit(status, parserDefaultSourceLimit);
+							SetInstanceLimit(status, parserDefaultInstanceLimit);
 							if(TryConsume(";")) break;
 							else if(TryConsume("\r\n")) break;
 							else if(TryConsume("{")) BeginBlock(status);
@@ -156,7 +156,7 @@ namespace Hemlock {
 		}
 		private void SetAggregator(TBaseStatus status, string aggString) {
 			Func<IEnumerable<int>, int> agg = null;
-			if(rulesDefaultAggregator == null || rulesDefaultAggregator != aggString) { //if the rules default agg is something unknown, 
+			if(rulesDefaultAggregator == null || rulesDefaultAggregator != aggString) { //if the rules default agg is something unknown,
 				switch(aggString) { // or just doesn't match the current one, set it.
 					case "total":
 						agg = rules.Total;
@@ -171,8 +171,8 @@ namespace Hemlock {
 			}
 			rules[status].Aggregator = agg;
 		}
-		private void SetSourceLimit(TBaseStatus status, string limitString) {
-			rules[status].SingleSource = (limitString == "single");
+		private void SetInstanceLimit(TBaseStatus status, string limitString) {
+			rules[status].SingleInstance = (limitString == "single");
 		}
 		private void ConsumeOrError(string targetToken) {
 			string temp = null;
@@ -237,7 +237,7 @@ namespace Hemlock {
 			string token = tokens[idx];
 			if(token.IsBasicVerb() || token.IsComparisonOperator()) ReadBasicRule(status);
 			else if(token.IsInvertedVerb() || token.IsNumber()) ReadInvertedRule(status);
-			else if(token.IsAggregator() || token.IsSourceLimiter()) ReadOtherRule(status);
+			else if(token.IsAggregator() || token.IsInstanceLimiter()) ReadOtherRule(status);
 			else throw new InvalidDataException($"Syntax error: Unexpected {token}.");
 		}
 		private void ReadBasicRule(TBaseStatus status){
@@ -286,7 +286,7 @@ namespace Hemlock {
 					break;
 				case "single":
 				case "multiple":
-					SetSourceLimit(status, token);
+					SetInstanceLimit(status, token);
 					break;
 			}
 			++idx;

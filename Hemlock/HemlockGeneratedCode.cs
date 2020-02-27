@@ -59,7 +59,7 @@ namespace Hemlock {
 			list.Add($@"		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) {{ }}");
 			list.Add($@"		/// <summary>");
 			list.Add($@"		/// Retrieve the current int value of the given status.");
-			list.Add($@"		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.");
+			list.Add($@"		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.");
 			list.Add($@"		/// </summary>");
 			list.Add($@"		public int this[{SingleTStatusString(num)} status] {{");
 			list.Add($@"			get {{ return this[Convert(status)]; }}");
@@ -869,7 +869,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus1 status] {
 			get { return this[Convert(status)]; }
@@ -881,7 +881,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus2 status] {
 			get { return this[Convert(status)]; }
@@ -893,7 +893,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus3 status] {
 			get { return this[Convert(status)]; }
@@ -905,7 +905,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus4 status] {
 			get { return this[Convert(status)]; }
@@ -917,7 +917,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus5 status] {
 			get { return this[Convert(status)]; }
@@ -929,7 +929,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus6 status] {
 			get { return this[Convert(status)]; }
@@ -941,7 +941,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus7 status] {
 			get { return this[Convert(status)]; }
@@ -953,7 +953,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus8 status] {
 			get { return this[Convert(status)]; }
@@ -965,7 +965,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus9 status] {
 			get { return this[Convert(status)]; }
@@ -977,7 +977,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus10 status] {
 			get { return this[Convert(status)]; }
@@ -989,7 +989,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus11 status] {
 			get { return this[Convert(status)]; }
@@ -1001,7 +1001,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus12 status] {
 			get { return this[Convert(status)]; }
@@ -1013,7 +1013,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus13 status] {
 			get { return this[Convert(status)]; }
@@ -1025,7 +1025,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus14 status] {
 			get { return this[Convert(status)]; }
@@ -1037,7 +1037,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus15 status] {
 			get { return this[Convert(status)]; }
@@ -1049,7 +1049,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus16 status] {
 			get { return this[Convert(status)]; }
@@ -1061,7 +1061,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus17 status] {
 			get { return this[Convert(status)]; }
@@ -1073,7 +1073,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus18 status] {
 			get { return this[Convert(status)]; }
@@ -1085,7 +1085,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus19 status] {
 			get { return this[Convert(status)]; }
@@ -1097,7 +1097,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus20 status] {
 			get { return this[Convert(status)]; }
@@ -1109,7 +1109,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus21 status] {
 			get { return this[Convert(status)]; }
@@ -1121,7 +1121,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus22 status] {
 			get { return this[Convert(status)]; }
@@ -1133,7 +1133,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus23 status] {
 			get { return this[Convert(status)]; }
@@ -1145,7 +1145,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus24 status] {
 			get { return this[Convert(status)]; }
@@ -1157,7 +1157,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus25 status] {
 			get { return this[Convert(status)]; }
@@ -1169,7 +1169,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus26 status] {
 			get { return this[Convert(status)]; }
@@ -1181,7 +1181,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus27 status] {
 			get { return this[Convert(status)]; }
@@ -1193,7 +1193,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus28 status] {
 			get { return this[Convert(status)]; }
@@ -1205,7 +1205,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus29 status] {
 			get { return this[Convert(status)]; }
@@ -1217,7 +1217,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus30 status] {
 			get { return this[Convert(status)]; }
@@ -1229,7 +1229,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus31 status] {
 			get { return this[Convert(status)]; }
@@ -1241,7 +1241,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus32 status] {
 			get { return this[Convert(status)]; }
@@ -1253,7 +1253,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus33 status] {
 			get { return this[Convert(status)]; }
@@ -1265,7 +1265,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus34 status] {
 			get { return this[Convert(status)]; }
@@ -1277,7 +1277,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus35 status] {
 			get { return this[Convert(status)]; }
@@ -1289,7 +1289,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus36 status] {
 			get { return this[Convert(status)]; }
@@ -1301,7 +1301,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus37 status] {
 			get { return this[Convert(status)]; }
@@ -1313,7 +1313,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus38 status] {
 			get { return this[Convert(status)]; }
@@ -1325,7 +1325,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus39 status] {
 			get { return this[Convert(status)]; }
@@ -1337,7 +1337,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus40 status] {
 			get { return this[Convert(status)]; }
@@ -1349,7 +1349,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus41 status] {
 			get { return this[Convert(status)]; }
@@ -1361,7 +1361,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus42 status] {
 			get { return this[Convert(status)]; }
@@ -1373,7 +1373,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus43 status] {
 			get { return this[Convert(status)]; }
@@ -1385,7 +1385,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus44 status] {
 			get { return this[Convert(status)]; }
@@ -1397,7 +1397,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus45 status] {
 			get { return this[Convert(status)]; }
@@ -1409,7 +1409,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus46 status] {
 			get { return this[Convert(status)]; }
@@ -1421,7 +1421,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus47 status] {
 			get { return this[Convert(status)]; }
@@ -1433,7 +1433,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus48 status] {
 			get { return this[Convert(status)]; }
@@ -1445,7 +1445,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus49 status] {
 			get { return this[Convert(status)]; }
@@ -1457,7 +1457,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus50 status] {
 			get { return this[Convert(status)]; }
@@ -1469,7 +1469,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus51 status] {
 			get { return this[Convert(status)]; }
@@ -1481,7 +1481,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus52 status] {
 			get { return this[Convert(status)]; }
@@ -1493,7 +1493,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus53 status] {
 			get { return this[Convert(status)]; }
@@ -1505,7 +1505,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus54 status] {
 			get { return this[Convert(status)]; }
@@ -1517,7 +1517,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus55 status] {
 			get { return this[Convert(status)]; }
@@ -1529,7 +1529,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus56 status] {
 			get { return this[Convert(status)]; }
@@ -1541,7 +1541,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus57 status] {
 			get { return this[Convert(status)]; }
@@ -1553,7 +1553,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus58 status] {
 			get { return this[Convert(status)]; }
@@ -1565,7 +1565,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus59 status] {
 			get { return this[Convert(status)]; }
@@ -1577,7 +1577,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus60 status] {
 			get { return this[Convert(status)]; }
@@ -1589,7 +1589,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus61 status] {
 			get { return this[Convert(status)]; }
@@ -1601,7 +1601,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus62 status] {
 			get { return this[Convert(status)]; }
@@ -1613,7 +1613,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus63 status] {
 			get { return this[Convert(status)]; }
@@ -1625,7 +1625,7 @@ namespace Hemlock {
 		internal StatusTracker(TObject obj, StatusSystem<TObject> rules) : base(obj, rules) { }
 		/// <summary>
 		/// Retrieve the current int value of the given status.
-		/// The status's value can also be directly set, but only if the SingleSource property is true for this status.
+		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TStatus64 status] {
 			get { return this[Convert(status)]; }

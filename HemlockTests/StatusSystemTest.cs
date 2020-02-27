@@ -33,37 +33,37 @@ namespace HemlockTests {
 				StatusConverter<TestStatus, int>.Convert = x => (int)x; // Reset it, because I'm not sure NUnit will.
 			}
 		}
-		[TestFixture] public class Sources : StatusSystemTest {
-			[TestCase] public void BasicSourceOperations() {
-				Assert.Throws<ArgumentNullException>(()=> tracker.AddSource(null));
-				Assert.Throws<ArgumentNullException>(() => tracker.RemoveSource(null));
-				Source<TestObj> s = new Source<TestObj>((int)TestStatus.E, value: 2); // (method #1 of creating Sources)
+		[TestFixture] public class StatusInstances : StatusSystemTest {
+			[TestCase] public void BasicStatusOperations() {
+				Assert.Throws<ArgumentNullException>(()=> tracker.AddStatusInstance(null));
+				Assert.Throws<ArgumentNullException>(() => tracker.RemoveStatusInstance(null));
+				StatusInstance<TestObj> s = new StatusInstance<TestObj>((int)TestStatus.E, value: 2); // (method #1 of creating StatusInstances)
 				Assert.AreEqual(0, tracker[TestStatus.E]);
-				tracker.AddSource(s);
+				tracker.AddStatusInstance(s);
 				Assert.AreEqual(2, tracker[TestStatus.E]);
 				s.Value = 7;
 				Assert.AreEqual(7, tracker[TestStatus.E]);
-				Source<TestObj> s2 = tracker.CreateSource(TestStatus.E, value: 6); // (method #2 of creating Sources)
-				tracker.AddSource(s2);
+				StatusInstance<TestObj> s2 = tracker.CreateStatusInstance(TestStatus.E, value: 6); // (method #2 of creating StatusInstances)
+				tracker.AddStatusInstance(s2);
 				Assert.AreEqual(13, tracker[TestStatus.E]);
-				tracker.RemoveSource(s);
+				tracker.RemoveStatusInstance(s);
 				Assert.AreEqual(6, tracker[TestStatus.E]);
 				tracker.Cancel(TestStatus.E);
 				Assert.AreEqual(0, tracker[TestStatus.E]);
 			}
-			[TestCase] public void SingleSource() {
-				rules[TestStatus.C].SingleSource = true;
-				var s = tracker.CreateSource(TestStatus.C, value: 2); // (method #3 of creating Sources)
-				var s2 = tracker.CreateSource(TestStatus.C, value: 7);
-				tracker.AddSource(s);
-				tracker.AddSource(s2);
+			[TestCase] public void SingleInstance() {
+				rules[TestStatus.C].SingleInstance = true;
+				var s = tracker.CreateStatusInstance(TestStatus.C, value: 2); // (method #3 of creating StatusInstances)
+				var s2 = tracker.CreateStatusInstance(TestStatus.C, value: 7);
+				tracker.AddStatusInstance(s);
+				tracker.AddStatusInstance(s2);
 				Assert.AreEqual(7, tracker[TestStatus.C]);
 
-				rules[TestStatus.B].SingleSource = true;
+				rules[TestStatus.B].SingleInstance = true;
 				tracker[TestStatus.B] = -4;
 				Assert.AreEqual(-4, tracker[TestStatus.B]);
-				var s3 = tracker.CreateSource(TestStatus.B, value: 1);
-				tracker.AddSource(s3);
+				var s3 = tracker.CreateStatusInstance(TestStatus.B, value: 1);
+				tracker.AddStatusInstance(s3);
 				Assert.AreEqual(1, tracker[TestStatus.B]);
 				tracker.Cancel(TestStatus.B);
 				Assert.AreEqual(0, tracker[TestStatus.B]);
@@ -71,27 +71,27 @@ namespace HemlockTests {
 				Assert.Throws<InvalidOperationException>(()=> tracker[TestStatus.E] = 5 );
 			}
 			[TestCase] public void SameEnumValues() {
-				rules[TestStatus.AlsoD].SingleSource = true; //D and AlsoD share their enum value (7).
-				Assert.True(rules[TestStatus.D].SingleSource);
+				rules[TestStatus.AlsoD].SingleInstance = true; //D and AlsoD share their enum value (7).
+				Assert.True(rules[TestStatus.D].SingleInstance);
 				tracker[TestStatus.D] = 11;
 				Assert.AreEqual(11, tracker[TestStatus.AlsoD]);
 			}
 			[TestCase] public void TryGetValue() {
-				var source = new Source<TestObj>(7); // 7 is defined for TestStatus
+				var instance = new StatusInstance<TestObj>(7); // 7 is defined for TestStatus
 				TestStatus status;
-				Assert.True(source.TryGetStatus(out status));
+				Assert.True(instance.TryGetStatus(out status));
 				Assert.AreEqual(TestStatus.D, status);
 
-				var source2 = new Source<TestObj>(8); // 8 is not defined for TestStatus
-				Assert.False(source2.TryGetStatus(out status)); // Returns false, no exception
+				var instance2 = new StatusInstance<TestObj>(8); // 8 is not defined for TestStatus
+				Assert.False(instance2.TryGetStatus(out status)); // Returns false, no exception
 			}
 			[TestCase]
 			public void GetValue() {
-				var source = new Source<TestObj>(7); // 7 is defined for TestStatus
-				Assert.AreEqual(TestStatus.D, source.GetStatus<TestStatus>());
+				var instance = new StatusInstance<TestObj>(7); // 7 is defined for TestStatus
+				Assert.AreEqual(TestStatus.D, instance.GetStatus<TestStatus>());
 
-				var source2 = new Source<TestObj>(8); // 8 is not defined for TestStatus
-				Assert.AreEqual((TestStatus)8, source2.GetStatus<TestStatus>());
+				var instance2 = new StatusInstance<TestObj>(8); // 8 is not defined for TestStatus
+				Assert.AreEqual((TestStatus)8, instance2.GetStatus<TestStatus>());
 			}
 		}
 		[TestFixture] public class Aggregators : StatusSystemTest {
@@ -170,9 +170,9 @@ namespace HemlockTests {
 				rules[TestStatus.A].PreventedWhen((obj, status) => obj != testObj); // only testObj can receive status.A
 				TestObj testObj2 = new TestObj();
 				var tracker2 = rules.CreateStatusTracker(testObj2);
-				tracker.AddSource(new Source<TestObj>((int)TestStatus.A, 3));
+				tracker.AddStatusInstance(new StatusInstance<TestObj>((int)TestStatus.A, 3));
 				Assert.AreEqual(3, tracker[TestStatus.A]); // not prevented for testObj
-				tracker2.AddSource(new Source<TestObj>((int)TestStatus.A, 3));
+				tracker2.AddStatusInstance(new StatusInstance<TestObj>((int)TestStatus.A, 3));
 				Assert.AreEqual(0, tracker2[TestStatus.A]); // prevented for testObj2
 			}
 			[TestCase] public void Cancels() {
@@ -203,21 +203,21 @@ namespace HemlockTests {
 				rules[TestStatus.A].Messages.Decreased = (obj, st, ov, nv) => {
 					message = "Status A is no longer true";
 				};
-				var s = new Source<TestObj>[4];
+				var s = new StatusInstance<TestObj>[4];
 				for(int i=0;i<4;++i) {
 					int ii = i;
-					s[i] = new Source<TestObj>((int)TestStatus.A, priority: ii*ii, overrideSetIndex: i); //0, 1, 4, & 9 priority
+					s[i] = new StatusInstance<TestObj>((int)TestStatus.A, priority: ii*ii, overrideSetIndex: i); //0, 1, 4, & 9 priority
 
 					rules.GetOverrideSet(i).Overrides(TestStatus.A).Messages.Decreased = (obj, st, ov, nv) => {
-						message = $"Status A is no longer true: Source {ii}";
+						message = $"Status A is no longer true: Instance {ii}";
 					};
 				}
-				tracker.AddSource(s[1]); // Order of addition doesn't matter
-				tracker.AddSource(s[3]);
-				tracker.AddSource(s[0]);
-				tracker.AddSource(s[2]);
+				tracker.AddStatusInstance(s[1]); // Order of addition doesn't matter
+				tracker.AddStatusInstance(s[3]);
+				tracker.AddStatusInstance(s[0]);
+				tracker.AddStatusInstance(s[2]);
 				tracker.Cancel(TestStatus.A);
-				Assert.AreEqual("Status A is no longer true: Source 3", message);
+				Assert.AreEqual("Status A is no longer true: Instance 3", message);
 				// Highest priority was last to be removed, and was the only one to actually change the
 				// value (because of the boolean aggregator)
 			}
@@ -285,7 +285,7 @@ namespace HemlockTests {
 				tracker.Cancel(TestStatus.C);
 				Assert.AreEqual("Status A changed", message); // Decrease message was not overridden
 			}
-			[TestCase] public void SourceOverrides() {
+			[TestCase] public void InstanceOverrides() {
 				string message = null;
 				string messagePart2 = null;
 				int num = 0;
@@ -300,8 +300,8 @@ namespace HemlockTests {
 				rules.GetOverrideSet(0).Overrides(TestStatus.A).Messages.Changed = (obj, status, oldValue, newValue) => {
 					message = "Status A changed because of status B changing";
 				};
-				var s = new Source<TestObj>((int)TestStatus.B, overrideSetIndex: 0);
-				tracker.AddSource(s);
+				var s = new StatusInstance<TestObj>((int)TestStatus.B, overrideSetIndex: 0);
+				tracker.AddStatusInstance(s);
 				Assert.AreEqual("Status A changed because of status B changing", message);
 				Assert.AreEqual(null, messagePart2); // The original change message for A did not happen at all
 				Assert.AreEqual(1, num); // Increase effect was not overridden
@@ -318,7 +318,7 @@ namespace HemlockTests {
 				tracker.Add(TestStatus.C);
 				Assert.IsTrue(increased); // Only the handler from the override set was applied
 			}
-			[TestCase] public void SourceOverridesWithOverrideSet() {
+			[TestCase] public void InstanceOverridesWithOverrideSet() {
 				int n = 0;
 				rules.GetOverrideSet(1).Overrides(TestStatus.E).Effects.Changed = (obj, st, ov, nv) => {
 					n = 5;
@@ -329,8 +329,8 @@ namespace HemlockTests {
 				rules[TestStatus.E].Effects.Changed = (obj, st, ov, nv) => {
 					n = 7;
 				};
-				rules[TestStatus.E].UsesOverrideSet(1);
-				tracker.Add(TestStatus.E, overrideSetIndex: 2);
+				rules[TestStatus.E].UsesOverrideSet(1); // Make sure that overrideSetIndex 2 is used
+				tracker.Add(TestStatus.E, overrideSetIndex: 2); //  even though TestStatus.E uses override set 1 by default.
 				Assert.AreEqual(6, n);
 			}
 			[TestCase] public void ToggleGenerateOptions() {
@@ -358,7 +358,7 @@ namespace HemlockTests {
 			[TestCase] public void BasicMultipleEnumOperations() {
 				StatusConverter<OtherStatus, int>.Convert = x => (int)x;
 				var mRules = new StatusSystem<TestObj, OtherStatus, TestStatus>(); // Int base. Using OtherStatus and TestStatus.
-				mRules[TestStatus.A].SingleSource = true;
+				mRules[TestStatus.A].SingleInstance = true;
 				mRules[OtherStatus.One].Cancels(TestStatus.A);
 				mRules[TestStatus.F].Feeds(OtherStatus.One);
 				mRules[OtherStatus.Two].Feeds(3, TestStatus.F);
@@ -562,12 +562,12 @@ namespace HemlockTests {
 			}
 		}
 		[TestFixture] public class Serialization : StatusSystemTest {
-			private void SerializeCallback(System.IO.BinaryWriter writer, Source<TestObj> instance, StatusTracker<TestObj> tracker) {
+			private void SerializeCallback(System.IO.BinaryWriter writer, StatusInstance<TestObj> instance, StatusTracker<TestObj> tracker) {
 				writer.Write("hello");
 				writer.Write(true);
 			}
-			private Source<TestObj> deserializedInstanceA;
-			private void DeserializeCallback(System.IO.BinaryReader reader, Source<TestObj> instance, TestObj obj) {
+			private StatusInstance<TestObj> deserializedInstanceA;
+			private void DeserializeCallback(System.IO.BinaryReader reader, StatusInstance<TestObj> instance, TestObj obj) {
 				Assert.AreEqual("hello", reader.ReadString());
 				Assert.AreEqual(true, reader.ReadBoolean());
 				if(instance.GetStatus<TestStatus>() == TestStatus.A){
