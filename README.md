@@ -384,6 +384,13 @@ For example, you might want to prevent Burning for any creature that is currentl
 This is useful for prevention conditions, because (unlike suppression and cancellation) prevention only matters at the exact moment when a status instance is added.
 
 
+### Cancel priority
+Normally, when a status is canceled, all the StatusInstances for that status are removed in insertion order, with the value being recalculated as each is removed.
+
+Occasionally, it might be useful to have more control over the order in which instances are removed, especially for a boolean status, and especially if each instance prints a different message (through use of the override set feature).
+
+You can set the CancelPriority property on a StatusInstance to control this behavior: StatusInstances will be removed in order of CancelPriority, lowest to highest (while preserving insertion order for instances with the same priority).
+
 
 ## How does the parser work?
 

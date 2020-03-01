@@ -173,7 +173,7 @@ namespace Hemlock {
 					writer.Write(instance.Status);
 					writer.Write((int)instance.InstanceType);
 					writer.Write(instance.Value);
-					writer.Write(instance.Priority);
+					writer.Write(instance.CancelPriority);
 					if(instance.OverrideSetIndex == null){
 						writer.Write(false);
 					}
@@ -350,7 +350,7 @@ namespace Hemlock {
 		/// (This will return the value of this status to zero, unless other statuses are feeding this one.)
 		/// </summary>
 		public void Cancel(TBaseStatus status) {
-			foreach(var instance in statusInstances[InstanceType.Feed][status].OrderBy(x => x.Priority)) {
+			foreach(var instance in statusInstances[InstanceType.Feed][status].OrderBy(x => x.CancelPriority)) {
 				RemoveStatusInstance(instance);
 			}
 			foreach(TBaseStatus extendingStatus in rules.statusesThatExtend[status]) Cancel(extendingStatus);

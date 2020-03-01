@@ -30,10 +30,10 @@ namespace Hemlock {
 			}
 		}
 		/// <summary>
-		/// Priority is important only during cancellation.  When a status is cancelled, its StatusInstances are removed
-		/// one at a time, in order of priority - lowest first.
+		/// When a status is cancelled, its StatusInstances are removed one at a time, in order of priority - lowest first.
+		/// This can be useful to ensure a specific ordering for value changes during cancellation.
 		/// </summary>
-		public int Priority { get; set; }
+		public int CancelPriority { get; set; }
 		/// <summary>
 		/// Test whether this StatusInstance's status is a valid value for the type of the "status" argument.
 		/// If so, load its value into "status" and return true.
@@ -101,7 +101,7 @@ namespace Hemlock {
 		public StatusInstance(TBaseStatus status, int value = 1, int priority = 0, InstanceType type = InstanceType.Feed, int? overrideSetIndex = null) {
 			Status = status;
 			internalValue = value;
-			Priority = priority;
+			CancelPriority = priority;
 			InstanceType = type;
 			this.overrideSetIndex = overrideSetIndex;
 		}
@@ -110,8 +110,8 @@ namespace Hemlock {
 			Status = copyFrom.Status;
 			if(value == null) internalValue = copyFrom.internalValue;
 			else internalValue = value.Value;
-			if(priority == null) Priority = copyFrom.Priority;
-			else Priority = priority.Value;
+			if(priority == null) CancelPriority = copyFrom.CancelPriority;
+			else CancelPriority = priority.Value;
 			if(type == null) InstanceType = copyFrom.InstanceType;
 			else InstanceType = type.Value;
 			if(overrideSetIndex == null) this.overrideSetIndex = copyFrom.overrideSetIndex;
