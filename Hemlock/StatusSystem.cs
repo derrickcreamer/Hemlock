@@ -548,33 +548,33 @@ namespace Hemlock {
 		/// </summary>
 		/// <param name="status">The status to which the instance will add its value</param>
 		/// <param name="value">The amount by which the instance will increase its status</param>
-		/// <param name="priority">An instance with lower priority will be cancelled before an instance with
+		/// <param name="cancelPriority">An instance with lower cancel priority will be cancelled before an instance with
 		/// higher priority when Cancel() is called on this status.</param>
 		/// <param name="type">
 		/// The InstanceType determines whether the instance will feed, suppress, or prevent its status.
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" StatusInstances are removed.)
 		/// </param>
-		public StatusInstance<TObject> CreateStatusInstance(TBaseStatus status, int value = 1, int priority = 0,
+		public StatusInstance<TObject> CreateStatusInstance(TBaseStatus status, int value = 1, int cancelPriority = 0,
 			InstanceType type = InstanceType.Feed, int? overrideSetIndex = null)
 		{
-			return new StatusInstance<TObject>(status, value, priority, type, overrideSetIndex);
+			return new StatusInstance<TObject>(status, value, cancelPriority, type, overrideSetIndex);
 		}
 		/// <summary>
 		/// Conveniently create a StatusInstance compatible with all trackers spawned from this object.
 		/// </summary>
 		/// <param name="status">The status to which the instance will add its value</param>
 		/// <param name="value">The amount by which the instance will increase its status</param>
-		/// <param name="priority">An instance with lower priority will be cancelled before an instance with
+		/// <param name="cancelPriority">An instance with lower cancel priority will be cancelled before an instance with
 		/// higher priority when Cancel() is called on this status.</param>
 		/// <param name="type">
 		/// The InstanceType determines whether the instance will feed, suppress, or prevent its status.
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" StatusInstances are removed.)
 		/// </param>
-		public StatusInstance<TObject> CreateStatusInstance<TStatus>(TStatus status, int value = 1, int priority = 0,
+		public StatusInstance<TObject> CreateStatusInstance<TStatus>(TStatus status, int value = 1, int cancelPriority = 0,
 			InstanceType type = InstanceType.Feed, int? overrideSetIndex = null)
 			where TStatus : struct
 		{
-			return new StatusInstance<TObject>(Convert(status), value, priority, type, overrideSetIndex);
+			return new StatusInstance<TObject>(Convert(status), value, cancelPriority, type, overrideSetIndex);
 		}
 		protected static TBaseStatus Convert<TStatus>(TStatus status) where TStatus : struct {
 			try {

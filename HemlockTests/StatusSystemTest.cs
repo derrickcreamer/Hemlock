@@ -206,7 +206,7 @@ namespace HemlockTests {
 				var s = new StatusInstance<TestObj>[4];
 				for(int i=0;i<4;++i) {
 					int ii = i;
-					s[i] = new StatusInstance<TestObj>((int)TestStatus.A, priority: ii*ii, overrideSetIndex: i); //0, 1, 4, & 9 priority
+					s[i] = new StatusInstance<TestObj>((int)TestStatus.A, cancelPriority: ii*ii, overrideSetIndex: i); //0, 1, 4, & 9 priority
 
 					rules.GetOverrideSet(i).Overrides(TestStatus.A).Messages.Decreased = (obj, st, ov, nv) => {
 						message = $"Status A is no longer true: Instance {ii}";
@@ -610,7 +610,6 @@ namespace HemlockTests {
 				byte[] bytes;
 				using(System.IO.MemoryStream stream = new MemoryStream()) {
 					tracker.Serialize(stream);
-
 					bytes = stream.ToArray();
 				}
 				StatusTracker<TestObj, TestStatus> tracker2;
@@ -627,6 +626,32 @@ namespace HemlockTests {
 				for(int i=0;i<bytes.Length;++i){
 					Assert.AreEqual(bytes[i], bytes2[i], $"Byte array differs at index {i}");
 				}
+			}
+			[TestCase] public void SerializingInstanceInTrackerThrows(){
+				var instanceInTracker = tracker.Add(TestStatus.B);
+				Assert.Throws<InvalidOperationException>(() => instanceInTracker.Serialize(new MemoryStream()));
+			}
+			[TestCase] public void LoneStatusInstance(){
+				StatusInstance<TestObj> instance = tracker.CreateStatusInstance(TestStatus.C, value: 6, cancelPriority: 3, type: InstanceType.Prevent, overrideSetIndex: -2);
+				byte[] bytes;
+				using(System.IO.MemoryStream stream = new MemoryStream()) {
+					instance.Serialize(stream);
+					bytes = stream.ToArray();
+				}
+				StatusInstance<TestObj> instance2;
+				using(System.IO.MemoryStream stream = new MemoryStream(bytes)) {
+					instance2 = StatusInstance<TestObj>.Deserialize(stream);
+				}
+				byte[] bytes2;
+				using(System.IO.MemoryStream stream = new MemoryStream()) {
+					instance2.Serialize(stream);
+					bytes2 = stream.ToArray();
+				}
+				Assert.AreEqual(bytes.Length, bytes2.Length, "Byte array lengths did not match");
+				for(int i=0;i<bytes.Length;++i){
+					Assert.AreEqual(bytes[i], bytes2[i], $"Byte array differs at index {i}");
+				}
+
 			}
 		}
 	}

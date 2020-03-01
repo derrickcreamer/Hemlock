@@ -143,7 +143,7 @@ However, note two things:
 + Second, this only prevents the addition of instances that are of type Poison - it doesn't prevent the addition of status instances that merely *feed* Poison. Therefore, preventing a status does not guarantee that its value will never increase. (For that, see **SUPPRESS**, below.)
 
 ###### What's an instance?
-A status instance simply tells the system that a specific status is present. You can think of it as the value that you're inserting for the given status.
+A status instance simply tells the system that a specific status is present. Each status instance has an integer value which contributes to the total for the given status.
 
 For example, if you add two instances of BonusArmor, one with value 3 and one with value 5, then your BonusArmor status will have a value of 8. The status instances are kept separate so you can remove one without affecting the others.
 
@@ -260,7 +260,6 @@ Calling this method at some point is highly recommended.
 
 However, rule analysis has the potential to be slow, so for release builds - once you've addressed any errors and warnings - you should set IgnoreRuleErrors to true and avoid calling GetRuleErrorsAndWarnings().
 
-For more information on the possible errors & warnings, see `<page that doesn't exist yet>`.
 
 ### Custom aggregators:
 'Total', 'Maximum', and 'Bool' are the built-in value aggregators, but you can define your own, too. Want to calculate the average of all the values, but only if there are at least 127 of them? You can do that.
@@ -290,12 +289,21 @@ If that isn't enough, you can also directly create a new converter. Let's say yo
     rules[Status.FatePoints].Feeds(i => i * i, Status.LuckPoints);
 
 
+### Changing values with status instances:
+Whenever you call CreateStatusInstance or Add on a StatusTracker, a StatusInstance is returned. Once added to a tracker, the value of that StatusInstance can be changed directly, immediately updating the status's value inside the tracker! For example:
+
+    var statusInstance = statusTracker.Add(Status.Stunned, 20);
+    statusInstance.Value -= 5;
+
+After this, the result of `statusTracker[Status.Stunned]` will be 15.
+
+
 ### Single-instance statuses:
 The default mode of Hemlock is to allow multiple instances per status, but there's an issue with that: With multiple instances, a statement like `statusTracker[Status.Poisoned] = 15;` doesn't make much sense. (This is why that assignment is illegal by default.)
 
 But sometimes you want a status to act less like a collection of values (i.e., multiple instances), and more like a single integer. That's where the single-instance flag comes into play.
 
-When you say `statusTracker[Status.Poisoned] = 15;`, you intend for the new value to be 15, no matter what was there before. This is exactly what happens, once you set SingleInstance:
+When you say `statusTracker[Status.Poisoned] = 15;`, you intend for the new value to be 15, no matter what was there before. This is exactly how it works once you set SingleInstance to true:
 
     rules[Status.Poisoned].SingleInstance = true;
 
@@ -390,6 +398,11 @@ Normally, when a status is canceled, all the StatusInstances for that status are
 Occasionally, it might be useful to have more control over the order in which instances are removed, especially for a boolean status, and especially if each instance prints a different message (through use of the override set feature).
 
 You can set the CancelPriority property on a StatusInstance to control this behavior: StatusInstances will be removed in order of CancelPriority, lowest to highest (while preserving insertion order for instances with the same priority).
+
+
+## Serialization
+
+See the [serialization guide](serializationGuide.md).
 
 
 ## How does the parser work?

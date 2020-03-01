@@ -170,17 +170,7 @@ namespace Hemlock {
 				List<StatusInstance<TObject>> values = pair.Value.ToList();
 				writer.Write(values.Count);
 				foreach(StatusInstance<TObject> instance in values){
-					writer.Write(instance.Status);
-					writer.Write((int)instance.InstanceType);
-					writer.Write(instance.Value);
-					writer.Write(instance.CancelPriority);
-					if(instance.OverrideSetIndex == null){
-						writer.Write(false);
-					}
-					else{
-						writer.Write(true);
-						writer.Write(instance.OverrideSetIndex.Value);
-					}
+					instance.SerializeInternal(writer);
 					statusInstanceCallback?.Invoke(writer, instance, this);
 				}
 			}
@@ -191,15 +181,7 @@ namespace Hemlock {
 				int key = reader.ReadInt32();
 				int count = reader.ReadInt32();
 				for(int j=0;j<count;++j){
-					int status = reader.ReadInt32();
-					int type = reader.ReadInt32();
-					int value = reader.ReadInt32();
-					int priority = reader.ReadInt32();
-					int? overrideIdx = null;
-					if(reader.ReadBoolean()){
-						overrideIdx = reader.ReadInt32();
-					}
-					StatusInstance<TObject> instance = new StatusInstance<TObject>(status, value, priority, (InstanceType)type, overrideIdx);
+					StatusInstance<TObject> instance = StatusInstance<TObject>.Deserialize(reader);
 					instance.tracker = this;
 					dict.Add(key, instance);
 					statusInstanceCallback?.Invoke(reader, instance, obj);
@@ -236,33 +218,33 @@ namespace Hemlock {
 		/// </summary>
 		/// <param name="status">The status to which the instance will add its value</param>
 		/// <param name="value">The amount by which the instance will increase its status</param>
-		/// <param name="priority">An instance with lower priority will be cancelled before an instance with
+		/// <param name="cancelPriority">An instance with lower cancel priority will be cancelled before an instance with
 		/// higher priority when Cancel() is called on this status.</param>
 		/// <param name="type">
 		/// The InstanceType determines whether the instance will feed, suppress, or prevent its status.
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" StatusInstances are removed.)
 		/// </param>
-		public StatusInstance<TObject> CreateStatusInstance(TBaseStatus status, int value = 1, int priority = 0,
+		public StatusInstance<TObject> CreateStatusInstance(TBaseStatus status, int value = 1, int cancelPriority = 0,
 			InstanceType type = InstanceType.Feed, int? overrideSetIndex = null)
 		{
-			return new StatusInstance<TObject>(status, value, priority, type, overrideSetIndex);
+			return new StatusInstance<TObject>(status, value, cancelPriority, type, overrideSetIndex);
 		}
 		/// <summary>
 		/// Conveniently create a StatusInstance compatible with this tracker. Does not add the StatusInstance to the tracker automatically.
 		/// </summary>
 		/// <param name="status">The status to which the instance will add its value</param>
 		/// <param name="value">The amount by which the instance will increase its status</param>
-		/// <param name="priority">An instance with lower priority will be cancelled before an instance with
+		/// <param name="cancelPriority">An instance with lower cancel priority will be cancelled before an instance with
 		/// higher priority when Cancel() is called on this status.</param>
 		/// <param name="type">
 		/// The InstanceType determines whether the instance will feed, suppress, or prevent its status.
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" StatusInstances are removed.)
 		/// </param>
-		public StatusInstance<TObject> CreateStatusInstance<TStatus>(TStatus status, int value = 1, int priority = 0,
+		public StatusInstance<TObject> CreateStatusInstance<TStatus>(TStatus status, int value = 1, int cancelPriority = 0,
 			InstanceType type = InstanceType.Feed, int? overrideSetIndex = null)
 			where TStatus : struct
 		{
-			return new StatusInstance<TObject>(Convert(status), value, priority, type, overrideSetIndex);
+			return new StatusInstance<TObject>(Convert(status), value, cancelPriority, type, overrideSetIndex);
 		}
 		/// <summary>
 		/// Add a StatusInstance to this tracker, updating the value of the status associated with the given instance.
@@ -282,7 +264,12 @@ namespace Hemlock {
 						}
 					}
 				}
-				if(rules.SingleInstance[status]) statusInstances[InstanceType.Feed].Clear(status);
+				if(rules.SingleInstance[status]) {
+					foreach(StatusInstance<TObject> removedInstance in statusInstances[InstanceType.Feed][status]) {
+						removedInstance.tracker = null;
+					}
+					statusInstances[InstanceType.Feed].Clear(status);
+				}
 			}
 			if(statusInstances[type].AddUnique(status, instance)) {
 				instance.tracker = this;
@@ -297,16 +284,16 @@ namespace Hemlock {
 		/// </summary>
 		/// <param name="status">The status to which the instance will add its value</param>
 		/// <param name="value">The amount by which the instance will increase the given status</param>
-		/// <param name="priority">An instance with lower priority will be cancelled before an instance with
+		/// <param name="cancelPriority">An instance with lower cancel priority will be cancelled before an instance with
 		/// higher priority when Cancel() is called on its status.</param>
 		/// <param name="type">
 		/// The InstanceType determines whether the instance will feed, suppress, or prevent its status.
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" StatusInstances are removed.)
 		/// </param>
-		public StatusInstance<TObject> Add(TBaseStatus status, int value = 1, int priority = 0,
+		public StatusInstance<TObject> Add(TBaseStatus status, int value = 1, int cancelPriority = 0,
 			InstanceType type = InstanceType.Feed, int? overrideSetIndex = null)
 		{
-			var instance = new StatusInstance<TObject>(status, value, priority, type, overrideSetIndex);
+			var instance = new StatusInstance<TObject>(status, value, cancelPriority, type, overrideSetIndex);
 			if(AddStatusInstance(instance)) return instance;
 			else return null;
 		}
@@ -316,17 +303,17 @@ namespace Hemlock {
 		/// </summary>
 		/// <param name="status">The status to which the instance will add its value</param>
 		/// <param name="value">The amount by which the instance will increase the given status</param>
-		/// <param name="priority">An instance with lower priority will be cancelled before an instance with
+		/// <param name="cancelPriority">An instance with lower cancel priority will be cancelled before an instance with
 		/// higher priority when Cancel() is called on its status.</param>
 		/// <param name="type">
 		/// The InstanceType determines whether the instance will feed, suppress, or prevent its status.
 		/// (Feed is the default and most common. When a status is cancelled, its "Feed" StatusInstances are removed.)
 		/// </param>
-		public StatusInstance<TObject> Add<TStatus>(TStatus status, int value = 1, int priority = 0,
+		public StatusInstance<TObject> Add<TStatus>(TStatus status, int value = 1, int cancelPriority = 0,
 			InstanceType type = InstanceType.Feed, int? overrideSetIndex = null)
 			where TStatus : struct
 		{
-			var instance = new StatusInstance<TObject>(Convert(status), value, priority, type, overrideSetIndex);
+			var instance = new StatusInstance<TObject>(Convert(status), value, cancelPriority, type, overrideSetIndex);
 			if(AddStatusInstance(instance)) return instance;
 			else return null;
 		}
