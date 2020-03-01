@@ -53,10 +53,10 @@ november foils oscar           # Note that Oscar is *NOT* set to "bool" here. No
 
 oscar foiled by november       # For this line, Oscar is set to Bool, not November. The verb doesn't matter - it only matters which status appears first.
 
-total:             # This line puts the parser back in "total" mode, which is the default unless you changed it on the StatusSystem object.
+total:             # This line puts the parser back in "total" mode, which is the default aggregator unless you changed it on the StatusSystem object.
 
 single:        # In addition to Total/Bool/Max modes for aggregators, there is also Multiple/Single.
-               # By enabling "single" mode, each status that begins a rule will have SingleSource set to true.
-papa suppresses quebec     # Again, this marks Papa as SingleSource, but doesn't affect Quebec.
+               # By enabling "single" mode, each status that begins a rule will have SingleInstance set to true.
+papa suppresses quebec     # Again, this marks Papa as SingleInstance, but doesn't affect Quebec.
 
 # That's all!

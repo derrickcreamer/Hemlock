@@ -487,7 +487,8 @@ namespace Hemlock {
 		}
 
 		internal DefaultValueDictionary<int, OverrideSet<TObject>> overrideSets;
-
+		/// <summary>Returns the OverrideSet of the chosen index.</summary>
+		/// <param name="index">Any integer value of your choice can be used to refer to an OverrideSet.</param>
 		public OverrideSet<TObject> GetOverrideSet(int index) {
 			if(!overrideSets.ContainsKey(index)) overrideSets[index] = new OverrideSet<TObject>();
 			return overrideSets[index];

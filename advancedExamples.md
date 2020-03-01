@@ -19,7 +19,7 @@ Here, you want the one that becomes true *first* to prevent the other from ever 
     rules[Status.Slow].Prevents(Status.Haste);
     rules[Status.Slow].Suppresses(Status.Haste);
 
-Easy enough - the prevention prevents new sources from being added, and the suppression prevents the value from ever becoming true, no matter what.
+Easy enough - the prevention prevents new instances of the other status from being added, and the suppression prevents the value of the other status from ever becoming true, no matter what.
 
 ### Last one wins
 
@@ -31,7 +31,7 @@ This one is even easier:
 
 ### Neutralization
 
-This one is slightly more complex. A common mistake in this case would be to have them suppress one another. (That doesn't work because, after the first is true, the second can't ever become true.)
+This one is slightly more complex. A common mistake in this situation would be to have them suppress one another. (That doesn't work because, after the first is true, the second can't ever become true.)
 
 Instead, you need to create 2 extra statuses. Now you'll have one status to indicate whether a Haste *effect* is present, and another status to indicate whether you're actually *Hasted*.
 

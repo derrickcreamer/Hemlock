@@ -19,7 +19,7 @@ In our context, a status is any numerical (or boolean) piece of data that is imp
 
 (For example, attribute scores like Strength, Dexterity, & Wisdom are numerical, as well as Poisoned which indicates how many points of poison damage you're taking per turn.)
 
-As mentioned, true-or-false values are also perfect examples of statuses, and Hemlock is set up to handle them elegantly.
+As mentioned, boolean true-or-false values are also perfect examples of statuses, and Hemlock is set up to handle them elegantly.
 
 (For example, you're either Undead or not, Confused or not, Doomed or not, capable-of-opening-doors or not.)
 
@@ -35,11 +35,11 @@ All these statuses, attributes, and other facts & game concepts *aren't* just in
 
 + ...you want the ImmuneToBurning status to render you, well, entirely immune to the Burning status - no matter which order they were applied in.
 
-+ ...you want the iron boots to keep you grounded even if you're under the effect of a Hover spell, but you don't want to actually get rid of that hover spell - just stop it from working while the boots are on!
-
 + ...you want a Magic Shell effect to prevent any new spells from affecting the target, while leaving all the current spells intact & working.
 
-+ ...you want the game's lighting system to be updated whenever an entity gains the 'Shining' status - the lighting must be updated immediately, or bugs and artifacts will appear in the lighting system.
++ ...you want your game's lighting system to be updated whenever an entity gains the 'Shining' status - but you need the lighting to be updated immediately, or bugs and artifacts will appear in the lighting system.
+
++ ...you want the iron boots to keep you grounded even if you're under the effect of a Hover spell, but you don't want to actually get rid of that hover spell - just stop it from working while the boots are on!
 
 
 
@@ -64,7 +64,7 @@ Another example:  Let's say that your game has Haste and Slow effects, and if an
 
 Normally, you'd probably check explicitly for Slow whenever Haste starts, and vice versa.
 
-With Hemlock, you can simply enforce 2 new rules:
+With Hemlock, you can simply declare 2 new rules:
 
 + Whenever Haste becomes true, cancel Slow.
 + Whenever Slow becomes true, cancel Haste.
@@ -79,7 +79,7 @@ If you currently use a `Dictionary<Status, int>` (or `<Status, bool>`), or somet
 
 Let's say you've got your Status enum and your Creature class, and you want to track each Status for each instance of your Creature class.
 
-One necessary part of setup is the definition of a converter from the Status enum to the underlying int value. This sounds silly, but unfortunately can't be avoided. Fortunately it is very easy:
+One necessary part of setup is the definition of a converter from the Status enum to the underlying int value. This sounds silly, but unfortunately can't be avoided due to how .NET treats enums used as generics. Fortunately it is very easy:
 
     StatusConverter<Status, int>.Convert = x => (int)x;
 
@@ -135,50 +135,50 @@ Since StunToxin is a type of Poison, this also means that anything that has a ne
 ElementalOfFire (which, as you might have guessed, is applied to creatures from the elemental plane of fire) isn't a type of Burning because it doesn't make sense to remove the ElementalOfFire status from a creature just because you cancelled its burning. For boolean statuses like these, it's easy to think of it as "ElementalOfFire *implies* Burning".
 
 #### A status can PREVENT another:
-*EnvironmentalFilter prevents Poison.*  This means that new sources of Poison can't be added as long as EnvironmentalFilter is true.
+*EnvironmentalFilter prevents Poison.*  This means that new instances of Poison can't be added as long as EnvironmentalFilter is true.
 
 However, note two things:
 
 + First, this does not affect any Poison which might already be present.
-+ Second, this only prevents sources that are of type Poison - it doesn't prevent sources that merely *feed* Poison. Therefore, preventing a status does not guarantee that its value will never increase. (For that, see **SUPPRESS**, below.)
++ Second, this only prevents the addition of instances that are of type Poison - it doesn't prevent the addition of status instances that merely *feed* Poison. Therefore, preventing a status does not guarantee that its value will never increase. (For that, see **SUPPRESS**, below.)
 
-###### What's a source?
-A source simply tells the system that a status has started. You can think of it as the value that you're inserting for the given status.
+###### What's an instance?
+A status instance simply tells the system that a specific status is present. You can think of it as the value that you're inserting for the given status.
 
-For example, if you add two sources of BonusArmor, one with value 3 and one with value 5, then your BonusArmor will be 8. The sources are kept separate so you can remove one without affecting the others.
+For example, if you add two instances of BonusArmor, one with value 3 and one with value 5, then your BonusArmor status will have a value of 8. The status instances are kept separate so you can remove one without affecting the others.
 
-Additionally, note that you could choose to set BonusArmor's calculation to use 'maximum' instead of 'total'! In that case, it would take the highest and you'd have BonusArmor 5.
+Additionally, note that you could choose to set BonusArmor's calculation to use 'maximum' instead of 'total'! In that case, Hemlock would use the highest value and you'd have a BonusArmor value of 5.
 
 
 #### A status can SUPPRESS another:
 *IronBoots suppresses Hovering.*  This means that the value of Hovering will be zero as long as IronBoots is true.
 
-Note that suppression affects the value of the Hovering status, but *sources* of Hovering are completely unaffected. Existing sources will remain exactly where they are, and new Hovering sources can be added - but the value of Hovering will remain 0 as long as the IronBoots status is present.
+Note that suppression affects the value of the Hovering status, but *instances* of Hovering are completely unaffected. Existing instances will remain exactly where they are, and new Hovering instances can be added - but the value of Hovering will remain 0 as long as the IronBoots status is present.
 
 #### A status can CANCEL another:
 *Slowed cancels Hasted.*  This means that, whenever the value of Slowed increases, Hasted will be cancelled.
 
-What does cancellation do? When a status is cancelled, all sources feeding that status are removed. (Note that if a *different* status is feeding the cancelled status, that fed value will not be removed or modified - it's not a Source.)
+What does cancellation do? When a status is cancelled, all instances of that status (that are adding their value to that status) are removed. (Note that if a *different* status is feeding the cancelled status, that fed value will not be removed or modified - it's not an instance of this status type.)
 
-Also note how naturally this works with statuses that are using the boolean aggregator: Since the boolean aggregator only cares about values of 0 and 1, a boolean status can only increase one time, from 0 to 1. Adding more sources won't make its value increase beyond 1, which is exactly how you want it to work. Once all sources are gone, its value will finally change from 1 back to 0. (For more information about the boolean aggregator, see the next section.)
+Also note how naturally this works with statuses that are using the boolean aggregator: Since the boolean aggregator only cares about values of 0 and 1, a boolean status can only increase one time, from 0 to 1. Adding more instances of that status won't make its value increase beyond 1, which is exactly how you want it to work. Once all instances are gone, its value will finally change from 1 back to 0. (For more information about the boolean aggregator, see the next section.)
 
 #### A status can FOIL another:
-*ImmuneToBurning foils Burning.*  "Foils" is a shorthand used in Hemlock. It means that a status prevents, suppresses, AND cancels another status.
+*ImmuneToBurning foils Burning.*  "Foils" is a shorthand used in Hemlock. It simply means that a status prevents, suppresses, AND cancels another status.
 
 It shows that a status totally beats another, and is generally how you'll want to represent complete immunity to some status.
 
 + ImmuneToBurning suppresses Burning, because Burning absolutely cannot be true while immune.
-+ ImmuneToBurning cancels Burning, because any existing source of Burning should instantly stop when you become immune.
++ ImmuneToBurning cancels Burning, because any existing instance of Burning should instantly stop when you become immune.
 + ImmuneToBurning prevents Burning, because no new Burning status should be able to start while you're immune.
 
 
 ## How is the value of a status calculated?
 
-As hinted above, the value of a status is calculated by considering the value of each of its sources and any other values that are fed into this status.
+As hinted above, the value of a status is calculated by considering the value of each of its instances and any other values that are fed into this status.
 
 By default, those values are added together to produce the total, but 'total' is only one of the built-in aggregators - boolean and maximum are also available.
 
-If you have a source with value 3, and a source with value 4, and you add them both to some status...
+If you have an instance with value 3, and an instance with value 4, and you add them both to some status...
 
 + ...a 'total' aggregator will result in a value of 7.
 + ...a 'bool' aggregator will result in a value of 1.
@@ -221,11 +221,11 @@ Hemlock supports using several different enums (or other value types) together -
 
 However, if two statuses have the same value, they are the same status to Hemlock.
 
-Since enums start at 0 by default, you'll need a small bit of setup to make sure your enums aren't conflicted:
+Since enums start at 0 by default, you'll need a small bit of setup to make sure your enums don't conflict:
 
 By default, they look like this:
 
-    enum Status{ Stunned, Poisoned, Confused };
+    enum Status { Stunned, Poisoned, Confused };
     enum Attribute { Strength, Dexterity, Intelligence };
     enum Spell { Flight, Fireball, Charm };
 
@@ -290,63 +290,88 @@ If that isn't enough, you can also directly create a new converter. Let's say yo
     rules[Status.FatePoints].Feeds(i => i * i, Status.LuckPoints);
 
 
-### Single-source statuses:
-The default mode of Hemlock is to support multiple sources, but there's an issue with that: With multiple sources, a statement like `statusTracker[Status.Poisoned] = 15;` doesn't make much sense. (This is why that assignment is illegal by default.)
+### Single-instance statuses:
+The default mode of Hemlock is to allow multiple instances per status, but there's an issue with that: With multiple instances, a statement like `statusTracker[Status.Poisoned] = 15;` doesn't make much sense. (This is why that assignment is illegal by default.)
 
-But sometimes you want a status to act less like a collection of values (i.e., multiple sources), and more like a single integer. That's where the single-source flag comes into play.
+But sometimes you want a status to act less like a collection of values (i.e., multiple instances), and more like a single integer. That's where the single-instance flag comes into play.
 
-When you say `statusTracker[Status.Poisoned] = 15;`, you intend for the new value to be 15, no matter what was there before. This is exactly what happens, once you set SingleSource:
+When you say `statusTracker[Status.Poisoned] = 15;`, you intend for the new value to be 15, no matter what was there before. This is exactly what happens, once you set SingleInstance:
 
-    rules[Status.Poisoned].SingleSource = true;
+    rules[Status.Poisoned].SingleInstance = true;
 
-Set SingleSource to true whenever you don't want multiple sources - whenever you'll always be setting the status directly, treating it as a single int.
+Set SingleInstance to true whenever you don't want multiple instances - whenever you'll always be setting the status directly, and treating it as a single int.
 
 It's handy if you want to use a status like this:
 
     statusTracker[Status.Poisoned]--;
 
-The other features still work great with single-source statuses. You can still respond automatically to changes, feed values from one to another, and so on.
-
-
-### Source overrides:
-Let's say that you have a standard message *"You're on fire!"* that appears whenever the Burning status increases.
-
-Now let's say that, in the situation where a wand of immolation is the cause of the Burning status, you want a different message: *"The wand's beam sets you on fire!"*
-
-You *could* print that message separately, but that would probably result in *both* messages appearing, and that doesn't sound very good.
-
-Instead, what you want is a source override:
-
-    var source = tracker.CreateSource(Status.Burning);
-    source.Overrides(Status.Burning).Messages.Increased = 
-        (creature, status, oldValue, newValue) => {
-            messagePrinter.Print("The wand's beam sets you on fire!");
-        };
-
-What the above code means is "If *this* source is responsible for the value of Burning being changed, override its usual 'increased' message with this new one."
-
-By doing this, you'll see only the new message, just like you wanted.
+The other features still work great with single-instance statuses. You can still respond automatically to changes, feed values from one to another, and so on.
 
 
 ### Status overrides:
-The concept behind source overrides (above) can also be applied to statuses themselves. Here's an example:
-
 Let's say you have a standard message *"You are stunned!"* that appears whenever the Stunned status increases.
 
-Now let's say that you also have a StunToxin status. StunToxin is a type of poison, and it feeds the Stunned status. Therefore, whenever you get hit with StunToxin, you'll be poisoned and stunned.
+Now let's say that you also have a StunToxin status. StunToxin is a type of poison (it extends the Poisoned status), and it also implies (feeds) the Stunned status. Therefore, whenever you get hit with StunToxin, you'll be both poisoned and stunned.
 
-Well, let's say that you'd prefer a different message any time that you get stunned because of StunToxin. This works very much like the source overrides above:
+Well, let's say that you'd prefer a different message to appear whenever you get stunned because of StunToxin: *"The toxin makes your head spin!"*
+
+You don't want *both* messages to be printed - that wouldn't sound quite right. Instead, what you want is a status override:
 
     rules[Status.StunToxin].Overrides(Status.Stunned).Messages.Increased =
         (creature, status, oldValue, newValue) => {
             messagePrinter.Print("The toxin makes your head spin!");
         };
 
-You can probably guess what that means: "If StunToxin is responsible for the value of Stunned being changed, override its usual 'increased' message with this new one."
+What the above code means is "If a change in the value of StunToxin is responsible for the value of Stunned being increased, override its usual 'increased' message with this new one."
+
+What if the Poisoned status also has its own message? If you want the new message to replace both the Stunned and Poisoned messages, you'll also want to override the Poisoned message, and this time you want it to do nothing at all:
+
+    rules[Status.StunToxin].Overrides(Status.Poisoned).Messages.Increased = null;
+
+By doing this, no 'Poisoned' message will be printed whenever StunToxin is being applied.
+
+
+### Override sets:
+If you have several OnChanged handlers you'd like to group together and reuse for multiple different statuses, use override sets:
+
+    rules.GetOverrideSet(0).Overrides(Status.Burning).Effects.Decreased =
+        (creature, status, oldValue, newValue) => { /*Overridden Burning handler code here*/ };
+    rules.GetOverrideSet(0).Override(Status.Freezing).Effects.Decreased =
+        (creature, status, oldValue, newValue) => { /*Overridden Freezing handler code here*/ };
+
+    rules[Status.Numb].UsesOverrideSet(0);
+    rules[Status.Ethereal].UsesOverrideSet(0);
+
+Now both Numb and Ethereal statuses will use the handlers from the override set. Note that if a status is using an override set, Hemlock will ignore any handlers defined directly on that status and use only the handlers on the override set.
+
+(You can choose any integer to refer to an override set; there are no requirements to start at zero or maintain any kind of order.)
+
+Override sets also allow you to customize messages and effects in another powerful way: instance overrides.
+
+
+### Instance overrides:
+The concept behind status overrides (above) can also be applied to individual status instances. Here's an example:
+
+Let's say that you have a standard message *"You're on fire!"* that appears whenever the Burning status increases.
+
+Now let's say that, whenever a wand of immolation is the cause of the Burning status, you want a different message: *"The wand's beam sets you on fire!"*
+
+Just like before, you don't want to print both messages, but unlike last time, this isn't one status overriding another status.
+
+What you want in this situation is an instance override:
+
+    rules.GetOverrideSet(42).Overrides(Status.Burning).Messages.Increased =
+        (creature, status, oldValue, newValue) => {
+            messagePrinter.Print("The wand's beam sets you on fire!");
+        };
+
+    creature.statusTracker.Add(Status.Burning, overrideSetIndex: 42);
+
+By setting the overrideSetIndex on the newly created StatusInstance, if the creature's Burning status increases when the new instance is added, it'll use override set 42 instead of the usual handlers for Burning.
 
 
 ### Passive prevention:
-This one is conceptually simple, but not really a core feature, so it appears all the way down here.
+This one is conceptually simple, but not really a core feature, so this section appears all the way down here.
 
 You might want some statuses to be prevented based on arbitrary conditions - conditions that have nothing to do with the status system.
 
@@ -356,7 +381,7 @@ For example, you might want to prevent Burning for any creature that is currentl
         (creature, status) => creature.IsCurrentlyInWater()
     );
 
-This is useful for prevention conditions, because (unlike suppression and cancellation) prevention only matters at the exact moment when a source is added.
+This is useful for prevention conditions, because (unlike suppression and cancellation) prevention only matters at the exact moment when a status instance is added.
 
 
 
