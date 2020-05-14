@@ -165,9 +165,9 @@ namespace Hemlock {
 		private void SerializeStatusInstances(InstanceType type, System.IO.BinaryWriter writer, Action<System.IO.BinaryWriter, StatusInstance<TObject>, StatusTracker<TObject>> statusInstanceCallback){
 			MultiValueDictionary<TBaseStatus, StatusInstance<TObject>> dict = statusInstances[type];
 			writer.Write(dict.GetAllKeys().Count());
-			foreach(KeyValuePair<TBaseStatus, IEnumerable<StatusInstance<TObject>>> pair in dict){
+			foreach(IGrouping<TBaseStatus, StatusInstance<TObject>> pair in dict){
 				writer.Write(pair.Key);
-				List<StatusInstance<TObject>> values = pair.Value.ToList();
+				List<StatusInstance<TObject>> values = pair.ToList();
 				writer.Write(values.Count);
 				foreach(StatusInstance<TObject> instance in values){
 					instance.SerializeInternal(writer);

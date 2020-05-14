@@ -10,11 +10,11 @@ namespace Hemlock {
 	internal class RuleChecker<TObject> {
 		private StatusSystem<TObject> rules;
 		private MultiValueDictionary<TStatus, Relationship> relationships = new MultiValueDictionary<TStatus, Relationship>();
-		private DefaultHashSet<List<TStatus>> visitedRps; // To avoid duplicating messages for rock-paper-scissors relationships.
-		private DefaultHashSet<TStatus> started = new DefaultHashSet<TStatus>();
-		private DefaultHashSet<TStatus> completed = new DefaultHashSet<TStatus>();
+		private EasyHashSet<List<TStatus>> visitedRps; // To avoid duplicating messages for rock-paper-scissors relationships.
+		private EasyHashSet<TStatus> started = new EasyHashSet<TStatus>();
+		private EasyHashSet<TStatus> completed = new EasyHashSet<TStatus>();
 		internal RuleChecker(StatusSystem<TObject> rules) {
-			visitedRps = new DefaultHashSet<List<TStatus>>(new IEnumValueEquality<TStatus>()); // Compare lists with value equality!
+			visitedRps = new EasyHashSet<List<TStatus>>(new IEnumValueEquality<TStatus>()); // Compare lists with value equality!
 			this.rules = rules;
 			CheckRules();
 		}
@@ -46,7 +46,7 @@ namespace Hemlock {
 			CheckRpsErrors(result, includeWarnings);
 			var negativeRelationships = new MultiValueDictionary<StatusPair, Relationship>();
 			var positiveRelationships = new MultiValueDictionary<StatusPair, Relationship>();
-			var mutualSuppressions = new DefaultHashSet<StatusPair>();
+			var mutualSuppressions = new EasyHashSet<StatusPair>();
 			foreach(Relationship r in relationships.GetAllValues()) {
 				if(r.Path.Count == 1) continue; // Skip any 'self' relationships.
 				if(!r.ChainBroken) { // Tally negative and positive (direct) relationships. These are compared later.
@@ -137,7 +137,7 @@ namespace Hemlock {
 			if(includeWarnings) {
 				// Check for feed + extend.
 				foreach(var pair in positiveRelationships) {
-					var list = pair.Value.ToList();
+					var list = pair.ToList();
 					var feed = list.Find(x => x.Relation == RelationType.Feeds);
 					var extend = list.Find(x => x.Relation == RelationType.Extends);
 					if(feed != null && extend != null) {
@@ -189,7 +189,7 @@ namespace Hemlock {
 						}
 					}
 					foreach(var pair in recordedIntsPerType) {
-						if(pair.Value.Count() > 1) { // If more than one enum has a name for this value...
+						if(pair.Count() > 1) { // If more than one enum has a name for this value...
 							var names = enumNames[pair.Key];
 							string error = $"WARNING:  Multiple enums with the same value ({pair.Key}):  ";
 							error += GetErrorLine(string.Join(", ", names));
@@ -213,12 +213,12 @@ namespace Hemlock {
 						if(visitedRps[trio]) continue; // If already visited, skip it.
 						RecordRpsVisited(trio);
 						bool notDangerous = false;
-						DefaultHashSet<RelationType> negatives = new DefaultHashSet<RelationType> {
+						EasyHashSet<RelationType> negatives = new EasyHashSet<RelationType> {
 							RelationType.Cancels, RelationType.Prevents, RelationType.Suppresses };
 						for(int i = 0;i<3;++i) { // For each pair (A -> B)...
 							TStatus source = r.Path[i].Status;
 							TStatus target = r.Path[i+1].Status;
-							DefaultHashSet<RelationType> removed = new DefaultHashSet<RelationType>();
+							EasyHashSet<RelationType> removed = new EasyHashSet<RelationType>();
 							foreach(RelationType presentRelation in negatives) {
 								if(!relationships[source]
 									.Where(x => x.TargetStatus.Equals(target) && !x.ChainBroken && x.Relation == presentRelation)
@@ -323,7 +323,7 @@ namespace Hemlock {
 			return status.ToString();
 		}
 		private void CheckRules() {
-			IEnumerable<KeyValuePair<TStatus, IEnumerable<TStatus>>> allPairs;
+			IEnumerable<IGrouping<TStatus, TStatus>> allPairs;
 			allPairs = rules.statusesFedBy[InstanceType.Feed];
 			allPairs = allPairs.Concat(rules.statusesFedBy[InstanceType.Suppress]);
 			allPairs = allPairs.Concat(rules.statusesFedBy[InstanceType.Prevent]);
@@ -331,7 +331,7 @@ namespace Hemlock {
 			allPairs = allPairs.Concat(rules.statusesExtendedBy);
 			foreach(var pair in allPairs) { // For every rule...
 				Explore(pair.Key);
-				foreach(var target in pair.Value) {
+				foreach(var target in pair) {
 					Explore(target);
 				}
 			}

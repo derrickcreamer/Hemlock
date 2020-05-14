@@ -434,7 +434,7 @@ namespace Hemlock {
 		}
 
 		internal DefaultValueDictionary<TBaseStatus, Aggregator> valueAggs;
-		internal DefaultHashSet<TBaseStatus> SingleInstance { get; private set; }
+		internal EasyHashSet<TBaseStatus> SingleInstance { get; private set; }
 
 		internal MultiValueDictionary<TBaseStatus, TBaseStatus> statusesCancelledBy;
 		internal MultiValueDictionary<TBaseStatus, TBaseStatus> statusesExtendedBy;
@@ -623,7 +623,7 @@ namespace Hemlock {
 			defaultAggs[InstanceType.Suppress] = Bool;
 			defaultAggs[InstanceType.Prevent] = Bool;
 			valueAggs = new DefaultValueDictionary<TBaseStatus, Aggregator>();
-			SingleInstance = new DefaultHashSet<TBaseStatus>();
+			SingleInstance = new EasyHashSet<TBaseStatus>();
 			statusesCancelledBy = new MultiValueDictionary<TBaseStatus, TBaseStatus>();
 			statusesExtendedBy = new MultiValueDictionary<TBaseStatus, TBaseStatus>();
 			statusesThatExtend = new MultiValueDictionary<TBaseStatus, TBaseStatus>();
