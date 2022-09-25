@@ -48,6 +48,23 @@ namespace Hemlock {
 			var positiveRelationships = new MultiValueDictionary<StatusPair, Relationship>();
 			var mutualSuppressions = new EasyHashSet<StatusPair>();
 			foreach(Relationship r in relationships.GetAllValues()) {
+				bool sourceIsDerived = rules.getDerivedValue[r.SourceStatus] != null;
+				bool targetIsDerived = rules.getDerivedValue[r.TargetStatus] != null;
+				if(r.Relation != RelationType.Self && (sourceIsDerived || targetIsDerived)){
+					string error = $"ERROR:  Status \"{GetBestName(r.SourceStatus)}\" {r.Relation.ToString().ToLower()} status \"{GetBestName(r.TargetStatus)}\"";
+					if (sourceIsDerived){
+						if(targetIsDerived){
+							error += ", but both statuses are derived statuses.";
+						}
+						else{
+							error += $", but \"{GetBestName(r.SourceStatus)}\" is a derived status.";
+						}
+					}
+					else if(targetIsDerived){
+						error += $", but \"{GetBestName(r.TargetStatus)}\" is a derived status.";
+					}
+					result.Add(error);
+				}
 				if(r.Path.Count == 1) continue; // Skip any 'self' relationships.
 				if(!r.ChainBroken) { // Tally negative and positive (direct) relationships. These are compared later.
 					if(r.IsNegative) negativeRelationships.Add(new StatusPair(r.SourceStatus, r.TargetStatus), r);

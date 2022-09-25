@@ -178,6 +178,15 @@ namespace Hemlock {
 				get { return rules.SingleInstance[status]; }
 				set { rules.SingleInstance[status] = value; }
 			}
+			/// <summary>
+			/// If CalculateDerivedValue is set for this status, it becomes a 'derived' status. A derived status can't
+			/// have instances added to it, and can't participate in status relationships (feed, suppress, or prevent).
+			/// Instead, this calculation will always be used to find its value based on other values in the tracker.
+			/// </summary>
+			public Func<StatusTracker<TObject>, int> CalculateDerivedValue {
+				get { return rules.getDerivedValue[status]; }
+				set { rules.getDerivedValue[status] = value; }
+			}
 			private const string StatusExpected = "Expected one or more statuses";
 			/// <summary>
 			/// Declare that this status extends one or more other statuses
@@ -435,6 +444,7 @@ namespace Hemlock {
 
 		internal DefaultValueDictionary<TBaseStatus, Aggregator> valueAggs;
 		internal EasyHashSet<TBaseStatus> SingleInstance { get; private set; }
+		internal DefaultValueDictionary<TBaseStatus, Func<StatusTracker<TObject>, int>> getDerivedValue { get; private set; }
 
 		internal MultiValueDictionary<TBaseStatus, TBaseStatus> statusesCancelledBy;
 		internal MultiValueDictionary<TBaseStatus, TBaseStatus> statusesExtendedBy;
@@ -624,6 +634,7 @@ namespace Hemlock {
 			defaultAggs[InstanceType.Prevent] = Bool;
 			valueAggs = new DefaultValueDictionary<TBaseStatus, Aggregator>();
 			SingleInstance = new EasyHashSet<TBaseStatus>();
+			getDerivedValue = new DefaultValueDictionary<TBaseStatus, Func<StatusTracker<TObject>, int>>();
 			statusesCancelledBy = new MultiValueDictionary<TBaseStatus, TBaseStatus>();
 			statusesExtendedBy = new MultiValueDictionary<TBaseStatus, TBaseStatus>();
 			statusesThatExtend = new MultiValueDictionary<TBaseStatus, TBaseStatus>();

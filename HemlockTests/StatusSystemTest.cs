@@ -372,6 +372,31 @@ namespace HemlockTests {
 				Assert.AreEqual(0, mTracker[TestStatus.A]);
 			}
 		}
+		[TestFixture] public class DerivedStatuses : StatusSystemTest {
+			[TestCase] public void BasicCalculation() {
+				rules[TestStatus.D].CalculateDerivedValue = baseTracker => {
+					var tracker = (StatusTracker<TestObj, TestStatus>)baseTracker;
+					if(tracker[TestStatus.A] > 0) return tracker[TestStatus.A] + tracker[TestStatus.B];
+					else return tracker[TestStatus.A];
+				};
+				Assert.AreEqual(0, tracker[TestStatus.D]);
+				tracker.Add(TestStatus.A, 22);
+				Assert.AreEqual(22, tracker[TestStatus.D]);
+				tracker.Cancel(TestStatus.A);
+				tracker.Add(TestStatus.B, 7);
+				Assert.AreEqual(0, tracker[TestStatus.D]);
+				tracker.Add(TestStatus.A, 2);
+				Assert.AreEqual(9, tracker[TestStatus.D]);
+				tracker.Cancel(TestStatus.A);
+				Assert.AreEqual(0, tracker[TestStatus.D]);
+			}
+			[TestCase] public void NoInstancesForDerivedStatuses() {
+				rules[TestStatus.A].CalculateDerivedValue = baseTracker => {
+					return 9;
+				};
+				Assert.Throws<InvalidOperationException>(() => tracker.Add(TestStatus.A, 1));
+			}
+		}
 		[TestFixture] public class RuleChecker : StatusSystemTest {
 			[TestCase] public void InfiniteFeedIllegal() {
 				var checkedRules = new StatusSystem<TestObj, TestStatus>();
@@ -483,6 +508,18 @@ namespace HemlockTests {
 				Assert.AreEqual(1, errors.Count); // Just one warning: Shared value (4).
 				Assert.IsTrue(errors[0].StartsWith("WARNING"));
 				checkedRules.CreateStatusTracker(testObj); // No exception.
+			}
+			[TestCase] public void DerivedStatusRelationshipError() {
+				var checkedRules = new StatusSystem<TestObj, TestStatus>();
+				checkedRules[TestStatus.B].Extends(TestStatus.A);
+				checkedRules[TestStatus.C].Extends(TestStatus.D);
+				checkedRules[TestStatus.A].CalculateDerivedValue = tracker => 4;
+				checkedRules[TestStatus.C].CalculateDerivedValue = tracker => 5;
+				var errors = checkedRules.GetRuleErrorsAndWarnings();
+				Assert.AreEqual(2, errors.Count); // One error for 'A', and one error for 'C'
+				Assert.IsTrue(errors[0].StartsWith("ERROR"));
+				Assert.IsTrue(errors[1].StartsWith("ERROR"));
+				Assert.Throws<InvalidDataException>(() => checkedRules.CreateStatusTracker(testObj));
 			}
 		}
 		[TestFixture] public class Parser : StatusSystemTest {

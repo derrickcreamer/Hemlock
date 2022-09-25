@@ -400,6 +400,28 @@ Occasionally, it might be useful to have more control over the order in which in
 You can set the CancelPriority property on a StatusInstance to control this behavior: StatusInstances will be removed in order of CancelPriority, lowest to highest (while preserving insertion order for instances with the same priority).
 
 
+### Derived statuses
+In the rare case where you have a status that can't be calculated with a normal aggregator (one where `int[] -> int` is not specific enough), you can make that status into a derived status. If your game has a numerical value that requires complex logic to be applied to several other statuses (but you still want it to be a status you can check), derived statuses might fit your need.
+
+The value of a derived status is based entirely on the values of some other statuses; a derived status does *not* participate in any of the usual status relationships in the normal way: it can't feed or be fed, prevent or be prevented, etc., nor can you add instances of a derived statuses directly.
+
+In order to turn a status into a derived status, simply set its `CalculateDerivedValue`. Here's an example where we determine the loot rating of a random encounter based on some other numbers:
+
+    rules[EnemyEncounterStatus.LootRating].CalculateDerivedValue = baseTracker => {
+        var tracker = (StatusTracker<MyGameObj, EnemyEncounterStatus, QuestStatus>)baseTracker;
+        if(tracker[EnemyEncounterStatus.BaseDifficultyRating] < 3){
+            return 1; // Only basic loot for easy encounters
+        }
+        // Give better loot based on the number of quests completed:
+        int result = tracker[EnemyEncounterStatus.BaseDifficultyRating] + (tracker[QuestStatus.QuestsCompleted] / 3);
+        return Math.Min(result, 10); // Loot rating is capped at 10 regardless of quests completed
+    };
+
+As you can see from this example, derived statuses are appropriate when the final value depends on treating different statuses differently during calculation (unlike the `int[] -> int` aggregators used for most statuses).
+
+Getting the value of a derived status works just like any other: `int lootRating = myTracker[EnemyEncounterStatus.LootRating];`
+
+
 ## Serialization
 
 See the [serialization guide](serializationGuide.md).

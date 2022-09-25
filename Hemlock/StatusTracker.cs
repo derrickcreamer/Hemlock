@@ -27,7 +27,11 @@ namespace Hemlock {
 		/// The status's value can also be directly set, but only if the SingleInstance property is true for this status.
 		/// </summary>
 		public int this[TBaseStatus status] {
-			get { return currentActualValues[status]; }
+			get {
+				Func<StatusTracker<TObject>, int> getDerivedValue = rules.getDerivedValue[status];
+				if(getDerivedValue != null) return getDerivedValue(this);
+				return currentActualValues[status];
+			}
 			set {
 				if(!rules.SingleInstance[status]) throw new InvalidOperationException("'SingleInstance' must be true in order to set a value directly.");
 				foreach(var instance in statusInstances[InstanceType.Feed][status]) {
@@ -251,6 +255,7 @@ namespace Hemlock {
 		/// </summary>
 		public bool AddStatusInstance(StatusInstance<TObject> instance) {
 			if(instance == null) throw new ArgumentNullException();
+			if(rules.getDerivedValue[instance.Status] != null) throw new InvalidOperationException("Can't add instances to derived statuses");
 			if(instance.tracker != null && instance.tracker != this) throw new InvalidOperationException("Already added to another tracker");
 			TBaseStatus status = instance.Status;
 			InstanceType type = instance.InstanceType;
