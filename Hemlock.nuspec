@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>Hemlock</id>
-    <version>1.1.1</version>
+    <version>1.1.2</version>
     <title>Hemlock Status Rule Manager</title>
     <authors>Derrick Creamer</authors>
     <owners>Derrick Creamer</owners>
@@ -11,7 +11,7 @@
     <projectUrl>https://github.com/derrickcreamer/Hemlock</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A status/attribute rule manager lib for C# games</description>
-    <copyright>Copyright 2015-2020</copyright>
+    <copyright>Copyright 2015-2022</copyright>
     <tags>gamedev c# csharp rules</tags>
     <dependencies>
       <dependency id="GameComponents" version="0.7.0" />
